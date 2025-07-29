@@ -1,249 +1,359 @@
-<body>
-    <div class="container">
-        </div>
+<!DOCTYPE html>
 
-    <script>
-        class UltraSessionManager {
-            constructor() {
-                this.sessions = JSON.parse(localStorage.getItem('ultra-sessions') || '[]');
-                this.currentSession = null;
-                this.performanceInterval = null;
-                this.elements = {
-                    sidebar: document.getElementById('sidebar'),
-                    newSessionBtn: document.querySelector('.new-session-btn'),
-                    sessionsList: document.getElementById('sessions-list'),
-                    browserIframe: document.getElementById('browser-iframe'),
-                    loadingIndicator: document.getElementById('loading'),
-                    fpsMonitor: document.getElementById('fps'),
-                    latencyMonitor: document.getElementById('latency'),
-                    proxyStatusMonitor: document.getElementById('proxy-status'),
-                    stealthStatusMonitor: document.getElementById('stealth-status'),
-                    toggleSidebarBtn: document.querySelector('.toggle-sidebar')
-                };
-                this.init();
-            }
+<html lang="en">
 
-            init() {
-                this.renderSessions();
-                this.setupEventListeners();
-                this.startPerformanceMonitoring();
+<head>
 
-                // Auto-optimization every 30 seconds
-                setInterval(() => this.optimizePerformance(), 30000);
+    <meta charset="UTF-8">
 
-                // Auto-start first session if none exist
-                if (this.sessions.length === 0) {
-                    this.createNewUltraSession();
-                } else {
-                    // Load the first session on startup or last active session
-                    this.loadSession(this.sessions[0]);
-                }
-            }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-            setupEventListeners() {
-                this.elements.newSessionBtn.addEventListener('click', () => this.createNewUltraSession());
-                this.elements.toggleSidebarBtn.addEventListener('click', () => this.toggleSidebar());
-                // Event delegation for session controls
-                this.elements.sessionsList.addEventListener('click', (event) => {
-                    const target = event.target;
-                    const sessionId = target.closest('.session-item')?.dataset.sessionId;
-                    if (!sessionId) return;
+    <title>Anchor Browser Session Manager</title>
 
-                    if (target.classList.contains('load-btn')) {
-                        const sessionToLoad = this.sessions.find(s => s.id === sessionId);
-                        if (sessionToLoad) this.loadSession(sessionToLoad);
-                    } else if (target.classList.contains('pause-btn')) {
-                        this.pauseSession(sessionId);
-                    } else if (target.classList.contains('resume-btn')) {
-                        this.resumeSession(sessionId);
-                    } else if (target.classList.contains('stop-btn')) {
-                        this.terminateSession(sessionId);
-                    }
-                });
-            }
+    <style>
 
-            async createNewUltraSession() {
-                this.elements.loadingIndicator.style.display = 'block';
-                this.elements.browserIframe.style.display = 'none';
-                try {
-                    const response = await fetch('/api/create-session', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'CREATE_ULTRA_SESSION' })
-                    });
+        body { margin: 0; padding: 0; height: 100vh; font-family: Arial, sans-serif; display: flex; }
 
-                    const data = await response.json();
+        
 
-                    if (response.ok && data.data && data.data.id && data.data.live_view_url) {
-                        const session = {
-                            id: data.data.id,
-                            url: data.data.live_view_url,
-                            name: `Ultra Session ${this.sessions.length + 1}`,
-                            created: new Date().toISOString(),
-                            status: 'active'
-                        };
+        .sidebar {
 
-                        this.sessions.push(session);
-                        this.saveToStorage();
-                        this.loadSession(session); // Load the newly created session
-                        this.renderSessions();
-                    } else {
-                        const errorMsg = data.error || 'Failed to create session with unknown error.';
-                        throw new Error(errorMsg);
-                    }
-                } catch (error) {
-                    console.error('Session creation failed:', error);
-                    alert(`Failed to create ultra session: ${error.message}`);
-                    this.elements.loadingIndicator.textContent = `Error: ${error.message}`;
-                    this.elements.loadingIndicator.style.color = '#ff4757'; // Red color for error
-                } finally {
-                    this.elements.loadingIndicator.style.display = 'none';
-                }
-            }
+            width: 250px;
 
-            loadSession(session) {
-                this.currentSession = session;
-                this.elements.loadingIndicator.style.display = 'block';
-                this.elements.browserIframe.style.display = 'none';
-                this.elements.loadingIndicator.textContent = `Loading ${session.name}...`;
+            background: #f5f5f5;
 
-                // Optionally, ensure the session is resumed before loading if it was paused
-                if (session.status === 'paused') {
-                    this.resumeSession(session.id).then(() => {
-                        this.elements.browserIframe.src = session.url;
-                    });
-                } else {
-                    this.elements.browserIframe.src = session.url;
-                }
+            border-right: 1px solid #ddd;
 
-                this.elements.browserIframe.onload = () => {
-                    this.elements.loadingIndicator.style.display = 'none';
-                    this.elements.browserIframe.style.display = 'block';
-                };
-                this.elements.browserIframe.onerror = () => {
-                    this.elements.loadingIndicator.textContent = 'Error loading session iframe.';
-                    this.elements.loadingIndicator.style.color = '#ff4757';
-                };
-            }
+            padding: 15px;
 
-            async pauseSession(sessionId) {
-                await this.sessionAction('PAUSE_SESSION', sessionId);
-                this.updateSessionStatus(sessionId, 'paused');
-            }
+            overflow-y: auto;
 
-            async resumeSession(sessionId) {
-                await this.sessionAction('RESUME_SESSION', sessionId);
-                this.updateSessionStatus(sessionId, 'active');
-            }
-
-            async terminateSession(sessionId) {
-                await this.sessionAction('TERMINATE_SESSION', sessionId);
-                this.sessions = this.sessions.filter(s => s.id !== sessionId);
-                this.saveToStorage();
-                this.renderSessions();
-                // If the terminated session was the current one, clear the iframe
-                if (this.currentSession && this.currentSession.id === sessionId) {
-                    this.elements.browserIframe.src = 'about:blank';
-                    this.elements.browserIframe.style.display = 'none';
-                    this.elements.loadingIndicator.textContent = 'Session terminated. Create a new one.';
-                    this.elements.loadingIndicator.style.display = 'block';
-                    this.currentSession = null;
-                }
-            }
-
-            async sessionAction(action, sessionId) {
-                try {
-                    const response = await fetch('/api/create-session', { // Re-using the same endpoint
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action, sessionId })
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `API error: ${response.status}`);
-                    }
-                } catch (error) {
-                    console.error(`${action} failed for session ${sessionId}:`, error);
-                    alert(`${action.replace('_', ' ')} failed for session ${sessionId}: ${error.message}`);
-                }
-            }
-
-            updateSessionStatus(sessionId, status) {
-                const session = this.sessions.find(s => s.id === sessionId);
-                if (session) {
-                    session.status = status;
-                    this.saveToStorage();
-                    this.renderSessions();
-                }
-            }
-
-            renderSessions() {
-                this.elements.sessionsList.innerHTML = this.sessions.map(session => `
-                    <div class="session-item" data-session-id="${session.id}">
-                        <div class="session-title">${session.name}</div>
-                        <div style="color: #ccc; font-size: 12px;">
-                            Status: <span style="font-weight: bold; color: ${session.status === 'active' ? '#00ff88' : '#ff9500'};">${session.status ? session.status.toUpperCase() : 'UNKNOWN'}</span>
-                        </div>
-                        <div style="color: #ccc; font-size: 12px;">
-                            Created: ${new Date(session.created).toLocaleString()}
-                        </div>
-                        <div class="session-controls">
-                            <button class="control-btn load-btn" ${this.currentSession && this.currentSession.id === session.id ? 'disabled' : ''}>
-                                LOAD
-                            </button>
-                            <button class="control-btn pause-btn" ${session.status === 'paused' ? 'disabled' : ''}>
-                                PAUSE
-                            </button>
-                            <button class="control-btn resume-btn" ${session.status === 'active' ? 'disabled' : ''}>
-                                RESUME
-                            </button>
-                            <button class="control-btn stop-btn">
-                                STOP
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            startPerformanceMonitoring() {
-                this.performanceInterval = setInterval(() => {
-                    this.elements.fpsMonitor.textContent = Math.floor(Math.random() * 5) + 58;
-                    this.elements.latencyMonitor.textContent = Math.floor(Math.random() * 10) + 8 + 'ms';
-                    const proxies = ['US-RESIDENTIAL', 'UK-RESIDENTIAL', 'CA-RESIDENTIAL', 'DE-RESIDENTIAL'];
-                    this.elements.proxyStatusMonitor.textContent = proxies[Math.floor(Math.random() * proxies.length)];
-                    this.elements.stealthStatusMonitor.textContent = 'ACTIVE'; // Assuming always active
-                }, 1000);
-            }
-
-            optimizePerformance() {
-                console.log('Initiating auto-optimization...');
-                // Implement actual optimization logic here.
-                // This could involve:
-                // 1. Checking current session health/latency and if it's too high,
-                //    potentially suggesting or automatically switching proxies.
-                // 2. Refreshing the browser live view if it seems stale.
-                // 3. Cleaning up old/idle sessions (needs a 'GET_SESSIONS' API call and logic).
-                // Example: If latency is consistently high, prompt user or switch proxy
-                // (Requires more sophisticated monitoring and API capabilities)
-                const currentLatency = parseInt(this.elements.latencyMonitor.textContent);
-                if (currentLatency > 50) { // Arbitrary threshold
-                    console.warn('High latency detected. Consider optimizing or changing proxy.');
-                    // Potentially trigger a proxy change via API or alert user
-                }
-            }
-
-            toggleSidebar() {
-                this.elements.sidebar.classList.toggle('collapsed');
-            }
-
-            saveToStorage() {
-                localStorage.setItem('ultra-sessions', JSON.stringify(this.sessions));
-            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            new UltraSessionManager();
-        });
+        
+
+        .sidebar h3 { margin: 0 0 15px 0; font-size: 16px; }
+
+        
+
+        .new-session-btn {
+
+            width: 100%;
+
+            padding: 10px;
+
+            background: #007bff;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 4px;
+
+            cursor: pointer;
+
+            margin-bottom: 15px;
+
+        }
+
+        
+
+        .session-item {
+
+            background: white;
+
+            border: 1px solid #ddd;
+
+            border-radius: 4px;
+
+            padding: 10px;
+
+            margin-bottom: 8px;
+
+            cursor: pointer;
+
+        }
+
+        
+
+        .session-item:hover { background: #f0f0f0; }
+
+        .session-item.active { border-color: #007bff; background: #e7f3ff; }
+
+        
+
+        .session-name { font-weight: bold; margin-bottom: 5px; }
+
+        .session-time { font-size: 12px; color: #666; }
+
+        
+
+        .session-controls {
+
+            margin-top: 8px;
+
+            display: flex;
+
+            gap: 5px;
+
+        }
+
+        
+
+        .control-btn {
+
+            padding: 4px 8px;
+
+            border: none;
+
+            border-radius: 3px;
+
+            cursor: pointer;
+
+            font-size: 11px;
+
+        }
+
+        
+
+        .pause-btn { background: #ffc107; }
+
+        .delete-btn { background: #dc3545; color: white; }
+
+        
+
+        .main-area {
+
+            flex: 1;
+
+            position: relative;
+
+        }
+
+        
+
+        #loading {
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            height: 100vh;
+
+            font-size: 18px;
+
+        }
+
+        
+
+        #browser-iframe {
+
+            width: 100%;
+
+            height: 100vh;
+
+            border: none;
+
+            display: none;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <h3>Browser Sessions</h3>
+
+        <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
+
+        <div id="sessions-list"></div>
+
+    </div>
+
+
+
+    <div class="main-area">
+
+        <div id="loading">Creating new browser session...</div>
+
+        <iframe id="browser-iframe" sandbox="allow-same-origin allow-scripts allow-forms allow-popups" 
+
+                allow="clipboard-read; clipboard-write"></iframe>
+
+    </div>
+
+
+
+    <script>
+
+        let sessions = JSON.parse(localStorage.getItem('browser-sessions') || '[]');
+
+        let currentSession = null;
+
+
+
+        function renderSessions() {
+
+            const list = document.getElementById('sessions-list');
+
+            list.innerHTML = sessions.map((session, index) => `
+
+                <div class="session-item ${currentSession === session ? 'active' : ''}" onclick="loadSession(${index})">
+
+                    <div class="session-name">${session.name}</div>
+
+                    <div class="session-time">${new Date(session.created).toLocaleString()}</div>
+
+                    <div class="session-controls">
+
+                        <button class="control-btn delete-btn" onclick="deleteSession(${index}, event)">Delete</button>
+
+                    </div>
+
+                </div>
+
+            `).join('');
+
+        }
+
+
+
+        async function createNewSession() {
+
+            try {
+
+                document.getElementById('loading').style.display = 'flex';
+
+                document.getElementById('browser-iframe').style.display = 'none';
+
+                
+
+                const response = await fetch('/api/create-session', {
+
+                    method: 'POST',
+
+                    headers: { 'Content-Type': 'application/json' }
+
+                });
+
+                
+
+                const data = await response.json();
+
+                
+
+                if (data.data && data.data.live_view_url) {
+
+                    const session = {
+
+                        name: `Session ${sessions.length + 1}`,
+
+                        url: data.data.live_view_url,
+
+                        id: data.data.id,
+
+                        created: new Date().toISOString()
+
+                    };
+
+                    
+
+                    sessions.push(session);
+
+                    localStorage.setItem('browser-sessions', JSON.stringify(sessions));
+
+                    
+
+                    loadSession(sessions.length - 1);
+
+                    renderSessions();
+
+                } else {
+
+                    throw new Error('No live_view_url received');
+
+                }
+
+            } catch (error) {
+
+                console.error('Error:', error);
+
+                document.getElementById('loading').textContent = 'Error creating session. Please try again.';
+
+            }
+
+        }
+
+
+
+        function loadSession(index) {
+
+            currentSession = sessions[index];
+
+            document.getElementById('browser-iframe').src = currentSession.url;
+
+            document.getElementById('browser-iframe').style.display = 'block';
+
+            document.getElementById('loading').style.display = 'none';
+
+            renderSessions();
+
+        }
+
+
+
+        function deleteSession(index, event) {
+
+            event.stopPropagation();
+
+            sessions.splice(index, 1);
+
+            localStorage.setItem('browser-sessions', JSON.stringify(sessions));
+
+            
+
+            if (currentSession === sessions[index]) {
+
+                currentSession = null;
+
+                document.getElementById('browser-iframe').style.display = 'none';
+
+                document.getElementById('loading').style.display = 'flex';
+
+                document.getElementById('loading').textContent = 'Select a session or create a new one';
+
+            }
+
+            
+
+            renderSessions();
+
+        }
+
+
+
+        // Initialize
+
+        renderSessions();
+
+        if (sessions.length === 0) {
+
+            createNewSession();
+
+        } else {
+
+            document.getElementById('loading').textContent = 'Select a session or create a new one';
+
+        }
+
     </script>
+
 </body>
+
 </html>
