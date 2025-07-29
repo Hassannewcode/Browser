@@ -114,10 +114,6 @@
             /* Performance optimizations */
             will-change: transform;
             transform: translateZ(0);
-            backface-visibility: hidden;
-            perspective: 1000px;
-            image-rendering: optimizeSpeed;
-            image-rendering: -webkit-optimize-contrast;
         }
     </style>
 </head>
@@ -131,11 +127,10 @@
     <div class="main-area">
         <div id="loading">Creating new browser session...</div>
         <iframe id="browser-iframe" 
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-top-navigation allow-presentation" 
-                allow="clipboard-read; clipboard-write; camera; microphone; geolocation; accelerometer; gyroscope; magnetometer; payment; usb; web-share; fullscreen"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock" 
+                allow="clipboard-read; clipboard-write; camera; microphone; geolocation; accelerometer; gyroscope; magnetometer; payment; usb"
                 loading="eager"
-                importance="high"
-                fetchpriority="high"></iframe>
+                importance="high"></iframe>
     </div>
 
     <script>
