@@ -12,8 +12,6 @@ export default async function handler(req, res) {
     try {
       console.log('Making request to Anchor API...');
       
-      const { settings = {} } = req.body;
-      
       const response = await fetch('https://api.anchorbrowser.io/v1/sessions', {
         method: 'POST',
         headers: {
@@ -22,12 +20,12 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           session: {
-            initial_url: settings.initialUrl || "https://google.com",
-            recording: { active: settings.recording === true },
+            initial_url: "https://google.com",
+            recording: { active: false }, // Disabled for max performance
             proxy: {
-              type: settings.proxyType || "anchor_residential",
-              country_code: settings.proxyCountry || "us",
-              active: settings.proxy === true
+              type: "anchor_residential",
+              country_code: "us",
+              active: false // Disabled for max speed
             },
             timeout: {
               max_duration: 999999,
@@ -39,19 +37,18 @@ export default async function handler(req, res) {
           },
           browser: {
             profile: {
-              name: settings.profileName || null,
-              persist: settings.persistProfile === true
+              persist: false // Disabled for speed
             },
-            adblock: { active: settings.adblock !== false },
-            popup_blocker: { active: settings.popupBlocker !== false },
-            captcha_solver: { active: settings.captchaSolver !== false },
+            adblock: { active: true }, // Enabled for faster loading
+            popup_blocker: { active: true }, // Enabled for performance
+            captcha_solver: { active: true },
             headless: { active: false },
             viewport: {
-              width: settings.viewportWidth || 1920,
-              height: settings.viewportHeight || 1080
+              width: 1920,
+              height: 1080
             },
-            fullscreen: { active: settings.fullscreen === true },
-            p2p_download: { active: settings.p2pDownload === true }
+            fullscreen: { active: false },
+            p2p_download: { active: false } // Disabled for performance
           }
         })
       });
