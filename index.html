@@ -1,196 +1,312 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anchor Browser Session Manager</title>
-    <style>
-        body { margin: 0; padding: 0; height: 100vh; font-family: Arial, sans-serif; display: flex; }
-        
-        .sidebar {
-            width: 250px;
-            background: #f5f5f5;
-            border-right: 1px solid #ddd;
-            padding: 15px;
-            overflow-y: auto;
-        }
-        
-        .sidebar h3 { margin: 0 0 15px 0; font-size: 16px; }
-        
-        .new-session-btn {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-        
-        .session-item {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 8px;
-            cursor: pointer;
-        }
-        
-        .session-item:hover { background: #f0f0f0; }
-        .session-item.active { border-color: #007bff; background: #e7f3ff; }
-        
-        .session-name { font-weight: bold; margin-bottom: 5px; }
-        .session-time { font-size: 12px; color: #666; }
-        
-        .session-controls {
-            margin-top: 8px;
-            display: flex;
-            gap: 5px;
-        }
-        
-        .control-btn {
-            padding: 4px 8px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        
-        .pause-btn { background: #ffc107; }
-        .delete-btn { background: #dc3545; color: white; }
-        
-        .main-area {
-            flex: 1;
-            position: relative;
-        }
-        
-        #loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-size: 18px;
-        }
-        
-        #browser-iframe {
-            width: 100%;
-            height: 100vh;
-            border: none;
-            display: none;
-        }
-    </style>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Anchor Browser Session</title>
+
+    <style>
+
+        body { margin: 0; padding: 0; height: 100vh; font-family: Arial, sans-serif; display: flex; }
+
+        
+
+        .sidebar {
+
+            width: 200px;
+
+            background: #f5f5f5;
+
+            border-right: 1px solid #ddd;
+
+            padding: 10px;
+
+            overflow-y: auto;
+
+        }
+
+        
+
+        .sidebar h4 { margin: 0 0 10px 0; font-size: 14px; }
+
+        
+
+        .new-session-btn {
+
+            width: 100%;
+
+            padding: 8px;
+
+            background: #007bff;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 4px;
+
+            cursor: pointer;
+
+            margin-bottom: 10px;
+
+            font-size: 12px;
+
+        }
+
+        
+
+        .session-item {
+
+            background: white;
+
+            border: 1px solid #ddd;
+
+            border-radius: 4px;
+
+            padding: 6px;
+
+            margin-bottom: 6px;
+
+            cursor: pointer;
+
+            font-size: 11px;
+
+        }
+
+        
+
+        .session-item:hover { background: #f0f0f0; }
+
+        .session-item.active { border-color: #007bff; background: #e7f3ff; }
+
+        
+
+        .session-name { font-weight: bold; margin-bottom: 2px; }
+
+        .session-time { color: #666; font-size: 10px; }
+
+        
+
+        .delete-btn {
+
+            background: #dc3545;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 2px;
+
+            padding: 2px 4px;
+
+            cursor: pointer;
+
+            font-size: 9px;
+
+            margin-top: 4px;
+
+        }
+
+        
+
+        .main-area { flex: 1; position: relative; }
+
+        
+
+        #loading { display: flex; justify-content: center; align-items: center; height: 100vh; font-size: 18px; }
+
+        #browser-iframe { width: 100%; height: 100vh; border: none; display: none; }
+
+    </style>
+
 </head>
+
 <body>
-    <div class="sidebar">
-        <h3>Browser Sessions</h3>
-        <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
-        <div id="sessions-list"></div>
-    </div>
 
-    <div class="main-area">
-        <div id="loading">Creating new browser session...</div>
-        <iframe id="browser-iframe" 
-                src="" 
-                sandbox="allow-scripts allow-forms allow-popups allow-pointer-lock allow-downloads" 
-                allow="clipboard-read; clipboard-write"></iframe>
-    </div>
+    <div class="sidebar">
 
-    <script>
-        let sessions = JSON.parse(localStorage.getItem('browser-sessions') || '[]');
-        let currentSession = null;
+        <h4>Sessions</h4>
 
-        function renderSessions() {
-            const list = document.getElementById('sessions-list');
-            list.innerHTML = sessions.map((session, index) => `
-                <div class="session-item ${currentSession === session ? 'active' : ''}" onclick="loadSession(${index})">
-                    <div class="session-name">${session.name}</div>
-                    <div class="session-time">${new Date(session.created).toLocaleString()}</div>
-                    <div class="session-controls">
-                        <button class="control-btn delete-btn" onclick="deleteSession(${index}, event)">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-        }
+        <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
 
-        async function createNewSession() {
-            try {
-                document.getElementById('loading').style.display = 'flex';
-                document.getElementById('browser-iframe').style.display = 'none';
-                
-                const response = await fetch('/api/create-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                const data = await response.json();
-                
-                // Keep this log for debugging the live_view_url if WebSocket issues persist
-                console.log('API response for new session:', data);
+        <div id="sessions-list"></div>
 
-                if (response.ok && data.data && data.data.live_view_url) {
-                    const session = {
-                        name: `Session ${sessions.length + 1}`,
-                        url: data.data.live_view_url,
-                        id: data.data.id,
-                        created: new Date().toISOString()
-                    };
-                    
-                    sessions.push(session);
-                    localStorage.setItem('browser-sessions', JSON.stringify(sessions));
-                    
-                    loadSession(sessions.length - 1);
-                    renderSessions();
-                } else {
-                    const errorMsg = data.error ? data.error : 'Unknown error from API';
-                    throw new Error(`Failed to get live_view_url: ${errorMsg}`);
-                }
-            } catch (error) {
-                console.error('Error creating new session:', error);
-                document.getElementById('loading').textContent = `Error creating session: ${error.message}. Please try again.`;
-                document.getElementById('loading').style.color = 'red';
-            }
-        }
+    </div>
 
-        function loadSession(index) {
-            currentSession = sessions[index];
-            document.getElementById('browser-iframe').src = currentSession.url;
-            document.getElementById('browser-iframe').style.display = 'block';
-            document.getElementById('loading').style.display = 'none';
-            renderSessions();
-        }
 
-        function deleteSession(index, event) {
-            event.stopPropagation();
-            const sessionIdToDelete = sessions[index].id;
 
-            sessions.splice(index, 1);
-            localStorage.setItem('browser-sessions', JSON.stringify(sessions));
-            
-            if (currentSession && currentSession.id === sessionIdToDelete) {
-                currentSession = null;
-                document.getElementById('browser-iframe').style.display = 'none';
-                document.getElementById('loading').style.display = 'flex';
-                document.getElementById('loading').textContent = 'Select a session or create a new one';
-            } else if (sessions.length > 0) {
-                loadSession(0);
-            } else {
-                currentSession = null;
-                document.getElementById('browser-iframe').style.display = 'none';
-                document.getElementById('loading').style.display = 'flex';
-                document.getElementById('loading').textContent = 'No sessions available. Create a new one.';
-            }
-            
-            renderSessions();
-        }
+    <div class="main-area">
 
-        // Initialize
-        renderSessions();
-        if (sessions.length === 0) {
-            createNewSession();
-        } else {
-            loadSession(sessions.length - 1);
-        }
-    </script>
+        <div id="loading">Creating new browser session...</div>
+
+        <iframe id="browser-iframe" sandbox="allow-same-origin allow-scripts allow-forms allow-popups" 
+
+                allow="clipboard-read; clipboard-write"></iframe>
+
+    </div>
+
+
+
+    <script>
+
+        let sessions = JSON.parse(localStorage.getItem('anchor-sessions') || '[]');
+
+        let currentSession = null;
+
+
+
+        function renderSessions() {
+
+            const list = document.getElementById('sessions-list');
+
+            list.innerHTML = sessions.map((session, index) => `
+
+                <div class="session-item ${currentSession === session ? 'active' : ''}" onclick="loadSession(${index})">
+
+                    <div class="session-name">${session.name}</div>
+
+                    <div class="session-time">${new Date(session.created).toLocaleString()}</div>
+
+                    <button class="delete-btn" onclick="deleteSession(${index}, event)">Delete</button>
+
+                </div>
+
+            `).join('');
+
+        }
+
+
+
+        async function createNewSession() {
+
+            try {
+
+                document.getElementById('loading').style.display = 'flex';
+
+                document.getElementById('browser-iframe').style.display = 'none';
+
+                
+
+                const response = await fetch('/api/create-session', {
+
+                    method: 'POST',
+
+                    headers: { 'Content-Type': 'application/json' }
+
+                });
+
+                
+
+                const data = await response.json();
+
+                
+
+                if (data.data && data.data.live_view_url) {
+
+                    const session = {
+
+                        name: `Session ${sessions.length + 1}`,
+
+                        url: data.data.live_view_url,
+
+                        id: data.data.id,
+
+                        created: new Date().toISOString()
+
+                    };
+
+                    
+
+                    sessions.push(session);
+
+                    localStorage.setItem('anchor-sessions', JSON.stringify(sessions));
+
+                    
+
+                    loadSession(sessions.length - 1);
+
+                    renderSessions();
+
+                } else {
+
+                    throw new Error('No live_view_url received');
+
+                }
+
+            } catch (error) {
+
+                console.error('Error:', error);
+
+                document.getElementById('loading').textContent = 'Error creating session. Please refresh.';
+
+            }
+
+        }
+
+
+
+        function loadSession(index) {
+
+            currentSession = sessions[index];
+
+            document.getElementById('browser-iframe').src = currentSession.url;
+
+            document.getElementById('browser-iframe').style.display = 'block';
+
+            document.getElementById('loading').style.display = 'none';
+
+            renderSessions();
+
+        }
+
+
+
+        function deleteSession(index, event) {
+
+            event.stopPropagation();
+
+            sessions.splice(index, 1);
+
+            localStorage.setItem('anchor-sessions', JSON.stringify(sessions));
+
+            
+
+            if (currentSession === sessions[index]) {
+
+                currentSession = null;
+
+                document.getElementById('browser-iframe').style.display = 'none';
+
+                document.getElementById('loading').style.display = 'flex';
+
+                document.getElementById('loading').textContent = 'Creating new browser session...';
+
+            }
+
+            
+
+            renderSessions();
+
+        }
+
+
+
+        // Initialize - keep original behavior
+
+        renderSessions();
+
+        createNewSession();
+
+    </script>
+
 </body>
+
 </html>
+
+
+
