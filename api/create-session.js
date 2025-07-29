@@ -45,15 +45,7 @@ export default async function handler(req, res) {
           // Max duration and idle timeout are set to very high values
           // as per the original request, implying a long-lived session.
           max_duration: 999999,
-          idle_timeout: 999999,
-          // PERFORMANCE: Enable proxy for potentially better speeds and geo-targeting.
-          // Note: "anchor_residential" and "country_code" are examples;
-          // refer to Anchor API documentation for supported proxy types and locations.
-          proxy: {
-            type: "anchor_residential",
-            country_code: "us", // or your preferred location
-            active: true
-          }
+          idle_timeout: 999999
         },
         browser: {
           // `headless: false` means a visible browser instance will be created.
@@ -62,16 +54,7 @@ export default async function handler(req, res) {
           // for a remote browser service, it can imply a higher quality stream from their end.
           // The actual "max fps, highest hz, refresh rate" are largely dependent on
           // the Anchor API's streaming capabilities and the client's network/hardware.
-          viewport: { width: 1920, height: 1080 },
-          // PERFORMANCE: Enable various optimization features within the browser instance.
-          adblock: { active: true },      // Blocks ads for faster page loading and reduced bandwidth.
-          popup_blocker: { active: true }, // Prevents disruptive popups, improving user experience and perceived speed.
-          captcha_solver: { active: true }, // Automated captcha solving can speed up automated workflows.
-          p2p_download: { active: false },  // Disabling P2P can reduce network overhead and improve stability.
-          // Extensions array for performance extensions.
-          // These would typically be custom extensions uploaded to and managed by the Anchor platform.
-          // You would replace the placeholder strings with actual extension IDs provided by Anchor.
-          // extensions: ["your-tab-suspender-extension-id", "other-performance-extension-ids"]
+          viewport: { width: 1920, height: 1080 }
         }
       }),
       signal: controller.signal // Attach the abort signal
