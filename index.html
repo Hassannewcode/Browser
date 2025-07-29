@@ -90,7 +90,9 @@
 
     <div class="main-area">
         <div id="loading">Creating new browser session...</div>
-        <iframe id="browser-iframe" sandbox="allow-same-origin allow-scripts allow-forms allow-popups" 
+        <iframe id="browser-iframe" 
+                src="" 
+                sandbox="allow-scripts allow-forms allow-popups allow-pointer-lock allow-downloads" 
                 allow="clipboard-read; clipboard-write"></iframe>
     </div>
 
@@ -123,7 +125,10 @@
                 
                 const data = await response.json();
                 
-                if (data.data && data.data.live_view_url) {
+                // IMPORTANT: Log the full response data to inspect the live_view_url
+                console.log('API response for new session:', data);
+
+                if (response.ok && data.data && data.data.live_view_url) { // Added response.ok check
                     const session = {
                         name: `Session ${sessions.length + 1}`,
                         url: data.data.live_view_url,
@@ -137,11 +142,14 @@
                     loadSession(sessions.length - 1);
                     renderSessions();
                 } else {
-                    throw new Error('No live_view_url received');
+                    // Improved error handling for API response
+                    const errorMsg = data.error ? data.error : 'Unknown error from API';
+                    throw new Error(`Failed to get live_view_url: ${errorMsg}`);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('loading').textContent = 'Error creating session. Please try again.';
+                console.error('Error creating new session:', error);
+                document.getElementById('loading').textContent = `Error creating session: ${error.message}. Please try again.`;
+                document.getElementById('loading').style.color = 'red'; // Make error message stand out
             }
         }
 
@@ -155,14 +163,24 @@
 
         function deleteSession(index, event) {
             event.stopPropagation();
+            // Get the ID of the session to be deleted before splicing
+            const sessionIdToDelete = sessions[index].id;
+
             sessions.splice(index, 1);
             localStorage.setItem('browser-sessions', JSON.stringify(sessions));
             
-            if (currentSession === sessions[index]) {
+            if (currentSession && currentSession.id === sessionIdToDelete) { // Check if current session is the one being deleted
                 currentSession = null;
                 document.getElementById('browser-iframe').style.display = 'none';
                 document.getElementById('loading').style.display = 'flex';
                 document.getElementById('loading').textContent = 'Select a session or create a new one';
+            } else if (sessions.length > 0) { // If other sessions exist, load the first one
+                loadSession(0);
+            } else { // No sessions left
+                currentSession = null;
+                document.getElementById('browser-iframe').style.display = 'none';
+                document.getElementById('loading').style.display = 'flex';
+                document.getElementById('loading').textContent = 'No sessions available. Create a new one.';
             }
             
             renderSessions();
@@ -173,7 +191,8 @@
         if (sessions.length === 0) {
             createNewSession();
         } else {
-            document.getElementById('loading').textContent = 'Select a session or create a new one';
+            // Load the most recent session if available, otherwise prompt to create new
+            loadSession(sessions.length - 1);
         }
     </script>
 </body>
