@@ -23,35 +23,12 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         session: {
-          initial_url: "https://anchorbrowser.io",
-          recording: { active: true },
-          proxy: {
-            type: "anchor_residential",
-            country_code: "us",
-            active: true
-          },
-          timeout: {
-            max_duration: 999999,
-            idle_timeout: 999999
-          },
-          live_view: { read_only: false }
+          max_duration: 999999,
+          idle_timeout: 999999
         },
         browser: {
-          profile: {
-            name: "performance-profile-" + Date.now(),
-            persist: true
-          },
-          adblock: { active: true },
-          popup_blocker: { active: true },
-          captcha_solver: { active: true },
           headless: { active: false },
-          viewport: {
-            width: 1920, // Changed from 3840
-            height: 1080 // Changed from 2160
-          },
-          fullscreen: { active: true },
-          p2p_download: { active: false },
-          extensions: []
+          viewport: { width: 1920, height: 1080 } // Higher resolution for better performance
         }
       })
     });
