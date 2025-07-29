@@ -17,7 +17,7 @@
     <script>
         async function createNewSession() {
             try {
-                const response = await fetch('http://localhost:3000/create-session', {
+                const response = await fetch('/api/create-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
