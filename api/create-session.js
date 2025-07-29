@@ -23,11 +23,11 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           session: {
             initial_url: settings.initialUrl || "https://google.com",
-            recording: { active: settings.recording === true }, // Disable for max performance
+            recording: { active: settings.recording === true }, // Disabled by default for performance
             proxy: {
               type: settings.proxyType || "anchor_residential",
               country_code: settings.proxyCountry || "us",
-              active: settings.proxy === true // Disable for max speed
+              active: settings.proxy === true // Disabled by default for performance
             },
             timeout: {
               max_duration: 999999,
@@ -35,15 +35,16 @@ export default async function handler(req, res) {
             },
             live_view: {
               read_only: false,
-              fps: settings.fps || 60, // Maximum FPS
-              quality: settings.quality || "high", // High quality streaming
-              latency: "low" // Low latency mode
+              fps: settings.fps || 60, // Configurable FPS
+              quality: settings.quality || "high", // High quality
+              buffer_size: settings.bufferSize || "minimal", // Minimal buffering
+              latency_mode: "ultra_low" // Ultra low latency
             }
           },
           browser: {
             profile: {
               name: settings.profileName || null,
-              persist: settings.persistProfile === true // Disable for speed
+              persist: settings.persistProfile === true // Disabled by default for performance
             },
             adblock: { active: settings.adblock !== false },
             popup_blocker: { active: settings.popupBlocker !== false },
@@ -57,8 +58,7 @@ export default async function handler(req, res) {
             p2p_download: { active: settings.p2pDownload === true },
             // Performance optimizations
             gpu_acceleration: { active: true },
-            hardware_acceleration: { active: true },
-            memory_optimization: { active: true }
+            hardware_acceleration: { active: true }
           }
         })
       });
