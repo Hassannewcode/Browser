@@ -109,13 +109,10 @@
             height: 100vh; 
             border: none; 
             display: none;
-            /* Maximum performance optimizations */
+            /* Performance optimizations only */
             will-change: transform;
             transform: translateZ(0);
-            backface-visibility: hidden;
-            perspective: 1000px;
             image-rendering: optimizeSpeed;
-            image-rendering: -webkit-optimize-contrast;
         }
     </style>
 </head>
@@ -129,12 +126,9 @@
     <div class="main-area">
         <div id="loading">Creating new browser session...</div>
         <iframe id="browser-iframe" 
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-top-navigation allow-presentation" 
-                allow="clipboard-read; clipboard-write; camera; microphone; geolocation; accelerometer; gyroscope; magnetometer; payment; usb; web-share; fullscreen"
-                loading="eager"
-                importance="high"
-                fetchpriority="high"
-                referrerpolicy="no-referrer-when-downgrade"></iframe>
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups" 
+                allow="clipboard-read; clipboard-write"
+                loading="eager"></iframe>
     </div>
 
     <script>
@@ -194,25 +188,12 @@
             renderSessions();
         }
 
-        async function deleteSession(index, event) {
+        function deleteSession(index, event) {
             event.stopPropagation();
-            const session = sessions[index];
-            
-            // Try to terminate session via API
-            try {
-                await fetch('/api/create-session', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: session.id })
-                });
-            } catch (error) {
-                console.log('Error terminating session:', error);
-            }
-            
             sessions.splice(index, 1);
             localStorage.setItem('anchor-sessions', JSON.stringify(sessions));
             
-            if (currentSession === session) {
+            if (currentSession === sessions[index]) {
                 currentSession = null;
                 document.getElementById('browser-iframe').style.display = 'none';
                 document.getElementById('loading').style.display = 'flex';
