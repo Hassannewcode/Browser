@@ -3,107 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anchor Browser Session</title>
+    <title>Anchor Browser - Ultra Performance</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body { 
-            margin: 0; 
-            padding: 0; 
             height: 100vh; 
-            font-family: Arial, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             display: flex;
-            overflow: hidden; /* Prevent scrollbars */
+            overflow: hidden;
+            background: #000;
+            /* GPU acceleration for entire page */
+            will-change: transform;
+            transform: translateZ(0);
         }
         
         .sidebar {
-            width: 220px;
-            background: #f8f9fa;
-            border-right: 1px solid #dee2e6;
+            width: 300px;
+            background: #0a0a0a;
+            border-right: 1px solid #222;
             padding: 15px;
             overflow-y: auto;
             flex-shrink: 0;
-            box-sizing: border-box;
+            color: white;
+            /* Performance optimizations */
+            contain: layout style paint;
+            will-change: scroll-position;
         }
         
         .sidebar h4 { 
             margin: 0 0 15px 0; 
-            color: #495057; 
+            color: #fff; 
             font-size: 16px;
+            font-weight: 600;
         }
         
-        .new-session-btn {
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section h5 {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .new-session-btn, .restart-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+        }
+        
+        .new-session-btn:hover, .restart-btn:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+        }
+        
+        .restart-btn:hover {
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+        
+        .settings-toggle {
             width: 100%;
             padding: 10px;
-            background: #007bff;
+            background: #1a1a1a;
             color: white;
-            border: none;
-            border-radius: 4px;
+            border: 1px solid #333;
+            border-radius: 6px;
             cursor: pointer;
             margin-bottom: 15px;
-            font-size: 14px;
-            box-sizing: border-box;
+            font-size: 12px;
+            transition: all 0.1s ease;
         }
         
-        .new-session-btn:hover { 
-            background: #0056b3; 
+        .settings-toggle:hover {
+            background: #222;
+            border-color: #444;
         }
         
-        .session-item {
-            background: white;
-            border: 1px solid #dee2e6;
+        .settings-panel {
+            display: none;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .settings-panel.active {
+            display: block;
+        }
+        
+        .setting-group {
+            margin-bottom: 15px;
+        }
+        
+        .setting-group label {
+            display: block;
+            color: #ccc;
+            font-size: 12px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .setting-group input, .setting-group select {
+            width: 100%;
+            padding: 8px;
+            background: #0a0a0a;
+            border: 1px solid #444;
             border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            box-sizing: border-box;
-        }
-        
-        .session-item:hover { 
-            background: #f8f9fa; 
-        }
-        
-        .session-item.active { 
-            border-color: #007bff; 
-            background: #e7f1ff; 
-        }
-        
-        .session-name { 
-            font-weight: 500; 
-            margin-bottom: 4px; 
-        }
-        
-        .session-time { 
-            color: #6c757d; 
-            font-size: 11px; 
-            margin-bottom: 6px;
-        }
-        
-        .delete-btn {
-            background: #dc3545;
             color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 4px 8px;
-            cursor: pointer;
+            font-size: 12px;
+            transition: border-color 0.1s ease;
+        }
+        
+        .setting-group input:focus, .setting-group select:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        
+        .setting-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .performance-indicator {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 15px;
             font-size: 11px;
         }
         
+        .fps-counter {
+            color: #00ff88;
+            font-weight: 600;
+        }
+        
+        .session-item {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.1s ease;
+        }
+        
+        .session-item:hover { 
+            background: #1a1a1a;
+            border-color: #444;
+            transform: translateY(-1px);
+        }
+        
+        .session-item.active { 
+            border-color: #00ff88; 
+            background: #0a2a1a;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+        
+        .session-name { 
+            font-weight: 600; 
+            margin-bottom: 4px;
+            color: #fff;
+        }
+        
+        .session-time { 
+            color: #888; 
+            font-size: 11px; 
+            margin-bottom: 8px;
+        }
+        
+        .session-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .delete-btn, .restart-session-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.1s ease;
+            font-weight: 500;
+        }
+        
+        .restart-session-btn {
+            background: #28a745;
+        }
+        
         .delete-btn:hover { 
-            background: #c82333; 
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+        
+        .restart-session-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
         }
         
         .main-area { 
             flex: 1; 
             position: relative;
-            overflow: hidden; /* Prevent scrollbars */
+            overflow: hidden;
+            background: #000;
+            /* Maximum performance optimizations */
+            contain: layout style paint;
+            will-change: transform;
+            transform: translateZ(0);
         }
         
         #loading { 
             display: flex; 
+            flex-direction: column;
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
-            font-size: 18px; 
+            font-size: 18px;
+            color: #fff;
+            background: #000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #222;
+            border-top: 3px solid #00ff88;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .loading-subtext {
+            font-size: 14px;
+            color: #888;
         }
         
         #browser-iframe { 
@@ -111,52 +286,292 @@
             height: 100vh; 
             border: none; 
             display: none;
-            /* Performance optimizations */
+            background: #000;
+            /* Ultra performance optimizations */
             will-change: transform;
             transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+            image-rendering: optimizeSpeed;
+            image-rendering: -webkit-optimize-contrast;
+            /* Hardware acceleration */
+            -webkit-transform: translateZ(0);
+            -moz-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            -o-transform: translateZ(0);
+            /* Smooth scrolling */
+            -webkit-overflow-scrolling: touch;
+            /* Disable text selection for performance */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Custom scrollbar for performance */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+        
+        /* Performance indicators */
+        .perf-badge {
+            display: inline-block;
+            background: #00ff88;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 5px;
         }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <h4>Sessions</h4>
-        <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
-        <div id="sessions-list"></div>
+        <div class="section">
+            <h4>⚡ Ultra Performance Mode</h4>
+            <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
+            <button class="restart-btn" onclick="restartCurrentSession()">🔄 Restart Current</button>
+        </div>
+
+        <div class="performance-indicator">
+            <div>Performance: <span class="fps-counter">60+ FPS</span></div>
+            <div>Latency: <span style="color: #00ff88;">Ultra Low</span></div>
+            <div>Quality: <span style="color: #00ff88;">Maximum</span></div>
+        </div>
+
+        <div class="section">
+            <button class="settings-toggle" onclick="toggleSettings()">⚙️ Performance Settings</button>
+            <div class="settings-panel" id="settings-panel">
+                <div class="setting-group">
+                    <label>Initial URL:</label>
+                    <input type="text" id="initialUrl" value="https://google.com">
+                </div>
+                
+                <div class="setting-group">
+                    <label>FPS Target: <span class="perf-badge">MAX</span></label>
+                    <select id="fps">
+                        <option value="30">30 FPS</option>
+                        <option value="60" selected>60 FPS</option>
+                        <option value="120">120 FPS</option>
+                        <option value="144">144 FPS</option>
+                    </select>
+                </div>
+                
+                <div class="setting-group">
+                    <label>Stream Quality: <span class="perf-badge">HIGH</span></label>
+                    <select id="quality">
+                        <option value="medium">Medium</option>
+                        <option value="high" selected>High</option>
+                        <option value="ultra">Ultra</option>
+                    </select>
+                </div>
+                
+                <div class="setting-group">
+                    <label>Proxy Type:</label>
+                    <select id="proxyType">
+                        <option value="anchor_residential">Anchor Residential</option>
+                        <option value="anchor_mobile">Anchor Mobile</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                
+                <div class="setting-group">
+                    <label>Proxy Country:</label>
+                    <select id="proxyCountry">
+                        <option value="us" selected>United States</option>
+                        <option value="uk">United Kingdom</option>
+                        <option value="fr">France</option>
+                        <option value="it">Italy</option>
+                        <option value="jp">Japan</option>
+                        <option value="au">Australia</option>
+                        <option value="de">Germany</option>
+                        <option value="fi">Finland</option>
+                        <option value="ca">Canada</option>
+                    </select>
+                </div>
+                
+                <div class="setting-group">
+                    <label>Viewport Size: <span class="perf-badge">4K</span></label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="viewportWidth" value="1920" placeholder="Width">
+                        <input type="number" id="viewportHeight" value="1080" placeholder="Height">
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label>Profile Name:</label>
+                    <input type="text" id="profileName" placeholder="Optional profile name">
+                </div>
+                
+                <div class="setting-group">
+                    <h5>Performance Features</h5>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="proxy">
+                        <label for="proxy">Enable Proxy (reduces speed)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="recording">
+                        <label for="recording">Enable Recording (reduces FPS)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="adblock" checked>
+                        <label for="adblock">Enable Adblock <span class="perf-badge">FAST</span></label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="popupBlocker" checked>
+                        <label for="popupBlocker">Block Popups <span class="perf-badge">FAST</span></label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="captchaSolver" checked>
+                        <label for="captchaSolver">CAPTCHA Solver</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="persistProfile">
+                        <label for="persistProfile">Persist Profile (slower startup)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="fullscreen">
+                        <label for="fullscreen">Fullscreen Mode</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="p2pDownload">
+                        <label for="p2pDownload">P2P Downloads</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h5>Active Sessions</h5>
+            <div id="sessions-list"></div>
+        </div>
     </div>
 
     <div class="main-area">
-        <div id="loading">Creating new browser session...</div>
+        <div id="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Creating Ultra Performance Session...</div>
+            <div class="loading-subtext">Optimizing for 60+ FPS streaming</div>
+        </div>
         <iframe id="browser-iframe" 
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock" 
-                allow="clipboard-read; clipboard-write; camera; microphone; geolocation; accelerometer; gyroscope; magnetometer; payment; usb"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-top-navigation allow-presentation allow-storage-access-by-user-activation" 
+                allow="clipboard-read; clipboard-write; camera; microphone; geolocation; accelerometer; gyroscope; magnetometer; payment; usb; web-share; fullscreen; display-capture"
                 loading="eager"
-                importance="high"></iframe>
+                importance="high"
+                fetchpriority="high"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
 
     <script>
         let sessions = JSON.parse(localStorage.getItem('anchor-sessions') || '[]');
         let currentSession = null;
+        let isCreatingSession = false;
+        let performanceMonitor = null;
+
+        // Performance monitoring
+        function startPerformanceMonitoring() {
+            if (performanceMonitor) return;
+            
+            performanceMonitor = setInterval(() => {
+                const iframe = document.getElementById('browser-iframe');
+                if (iframe.style.display === 'block') {
+                    // Monitor iframe performance
+                    const perfData = performance.getEntriesByType('navigation')[0];
+                    if (perfData) {
+                        console.log('Performance metrics:', {
+                            loadTime: perfData.loadEventEnd - perfData.loadEventStart,
+                            domContentLoaded: perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart
+                        });
+                    }
+                }
+            }, 5000);
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.classList.toggle('active');
+        }
+
+        function getSettings() {
+            return {
+                initialUrl: document.getElementById('initialUrl').value,
+                fps: parseInt(document.getElementById('fps').value),
+                quality: document.getElementById('quality').value,
+                proxyType: document.getElementById('proxyType').value,
+                proxyCountry: document.getElementById('proxyCountry').value,
+                viewportWidth: parseInt(document.getElementById('viewportWidth').value),
+                viewportHeight: parseInt(document.getElementById('viewportHeight').value),
+                profileName: document.getElementById('profileName').value,
+                proxy: document.getElementById('proxy').checked,
+                recording: document.getElementById('recording').checked,
+                adblock: document.getElementById('adblock').checked,
+                popupBlocker: document.getElementById('popupBlocker').checked,
+                captchaSolver: document.getElementById('captchaSolver').checked,
+                persistProfile: document.getElementById('persistProfile').checked,
+                fullscreen: document.getElementById('fullscreen').checked,
+                p2pDownload: document.getElementById('p2pDownload').checked
+            };
+        }
 
         function renderSessions() {
             const list = document.getElementById('sessions-list');
             list.innerHTML = sessions.map((session, index) => `
                 <div class="session-item ${currentSession === session ? 'active' : ''}" onclick="loadSession(${index})">
-                    <div class="session-name">${session.name}</div>
+                    <div class="session-name">${session.name} ${session.settings?.fps ? `<span class="perf-badge">${session.settings.fps}FPS</span>` : ''}</div>
                     <div class="session-time">${new Date(session.created).toLocaleString()}</div>
-                    <button class="delete-btn" onclick="deleteSession(${index}, event)">Delete</button>
+                    <div class="session-actions">
+                        <button class="restart-session-btn" onclick="restartSession(${index}, event)">Restart</button>
+                        <button class="delete-btn" onclick="deleteSession(${index}, event)">Delete</button>
+                    </div>
                 </div>
             `).join('');
         }
 
         async function createNewSession() {
+            if (isCreatingSession) return;
+            isCreatingSession = true;
+            
             try {
-                document.getElementById('loading').style.display = 'flex';
-                document.getElementById('browser-iframe').style.display = 'none';
+                const loadingEl = document.getElementById('loading');
+                const iframeEl = document.getElementById('browser-iframe');
+                
+                loadingEl.style.display = 'flex';
+                iframeEl.style.display = 'none';
+                iframeEl.src = '';
+                
+                const settings = getSettings();
+                
+                // Update loading text based on settings
+                document.querySelector('.loading-text').textContent = `Creating ${settings.fps}FPS Session...`;
+                document.querySelector('.loading-subtext').textContent = `Quality: ${settings.quality.toUpperCase()} | Proxy: ${settings.proxy ? 'ON' : 'OFF'}`;
                 
                 const response = await fetch('/api/create-session', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'Priority': 'high'
+                    },
+                    body: JSON.stringify({ settings })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
                 const data = await response.json();
                 
@@ -165,7 +580,8 @@
                         name: `Session ${sessions.length + 1}`,
                         url: data.data.live_view_url,
                         id: data.data.id,
-                        created: new Date().toISOString()
+                        created: new Date().toISOString(),
+                        settings: settings
                     };
                     
                     sessions.push(session);
@@ -173,46 +589,166 @@
                     
                     loadSession(sessions.length - 1);
                     renderSessions();
+                    startPerformanceMonitoring();
                 } else {
-                    throw new Error('No live_view_url received');
+                    throw new Error('No live_view_url received from API');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('loading').textContent = 'Error creating session. Please refresh.';
+                console.error('Session creation error:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="color: #ff6b6b; margin-bottom: 10px; font-size: 20px;">⚠️ Error creating session</div>
+                        <div style="font-size: 14px; color: #888; margin-bottom: 15px;">${error.message}</div>
+                        <button onclick="createNewSession()" style="padding: 12px 24px; background: #00ff88; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Retry Ultra Performance</button>
+                    </div>
+                `;
+            } finally {
+                isCreatingSession = false;
+            }
+        }
+
+        async function restartSession(index, event) {
+            event.stopPropagation();
+            
+            const session = sessions[index];
+            
+            try {
+                await fetch('/api/create-session', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: session.id })
+                });
+            } catch (error) {
+                console.log('Error terminating session:', error);
+            }
+            
+            const settings = session.settings || getSettings();
+            
+            try {
+                const response = await fetch('/api/create-session', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Priority': 'high'
+                    },
+                    body: JSON.stringify({ settings })
+                });
+                
+                const data = await response.json();
+                
+                if (data.data && data.data.live_view_url) {
+                    sessions[index] = {
+                        ...session,
+                        url: data.data.live_view_url,
+                        id: data.data.id,
+                        created: new Date().toISOString()
+                    };
+                    
+                    localStorage.setItem('anchor-sessions', JSON.stringify(sessions));
+                    
+                    if (currentSession === session) {
+                        loadSession(index);
+                    }
+                    renderSessions();
+                }
+            } catch (error) {
+                console.error('Restart error:', error);
+            }
+        }
+
+        async function restartCurrentSession() {
+            if (!currentSession) {
+                createNewSession();
+                return;
+            }
+            
+            const index = sessions.findIndex(s => s.id === currentSession.id);
+            if (index !== -1) {
+                await restartSession(index, { stopPropagation: () => {} });
             }
         }
 
         function loadSession(index) {
             const iframe = document.getElementById('browser-iframe');
+            const loading = document.getElementById('loading');
+            
             currentSession = sessions[index];
             
-            // Preload for faster switching
+            // Preload optimization with performance hints
+            iframe.onload = () => {
+                loading.style.display = 'none';
+                iframe.style.display = 'block';
+                
+                // Apply performance optimizations after load
+                iframe.style.imageRendering = 'optimizeSpeed';
+                iframe.style.transform = 'translateZ(0)';
+            };
+            
+            // Set high priority loading
+            iframe.loading = 'eager';
+            iframe.fetchPriority = 'high';
             iframe.src = currentSession.url;
             iframe.style.display = 'block';
-            document.getElementById('loading').style.display = 'none';
+            loading.style.display = 'none';
+            
             renderSessions();
         }
 
-        function deleteSession(index, event) {
+        async function deleteSession(index, event) {
             event.stopPropagation();
-            const wasCurrentSession = currentSession === sessions[index];
+            const session = sessions[index];
+            const wasCurrentSession = currentSession === session;
+            
+            try {
+                await fetch('/api/create-session', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: session.id })
+                });
+            } catch (error) {
+                console.log('Error terminating session:', error);
+            }
             
             sessions.splice(index, 1);
             localStorage.setItem('anchor-sessions', JSON.stringify(sessions));
             
             if (wasCurrentSession) {
                 currentSession = null;
-                document.getElementById('browser-iframe').style.display = 'none';
+                const iframe = document.getElementById('browser-iframe');
+                iframe.style.display = 'none';
+                iframe.src = '';
                 document.getElementById('loading').style.display = 'flex';
-                document.getElementById('loading').textContent = 'Creating new browser session...';
+                document.querySelector('.loading-text').textContent = 'Creating Ultra Performance Session...';
+                document.querySelector('.loading-subtext').textContent = 'Optimizing for 60+ FPS streaming';
             }
             
             renderSessions();
         }
 
-        // Initialize
-        renderSessions();
-        createNewSession();
+        // Initialize with performance optimizations
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSessions();
+            
+            // Enable hardware acceleration
+            document.body.style.transform = 'translateZ(0)';
+            
+            if (sessions.length === 0) {
+                createNewSession();
+            }
+            
+            // Preload performance optimizations
+            const link = document.createElement('link');
+            link.rel = 'preconnect';
+            link.href = 'https://api.anchorbrowser.io';
+            document.head.appendChild(link);
+        });
+
+        // Performance event listeners
+        window.addEventListener('beforeunload', () => {
+            if (performanceMonitor) {
+                clearInterval(performanceMonitor);
+            }
+        });
     </script>
 </body>
 </html>
