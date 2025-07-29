@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         },
         browser: {
           profile: {
-            name: "session-profile-" + Date.now(),
+            name: "performance-profile-" + Date.now(),
             persist: true
           },
           adblock: { active: true },
@@ -46,10 +46,8 @@ export default async function handler(req, res) {
           captcha_solver: { active: true },
           headless: { active: false },
           viewport: {
-            // Changed from 3840 to 1920
-            width: 1920,
-            // Changed from 2160 to 1080
-            height: 1080
+            width: 1920, // Changed from 3840
+            height: 1080 // Changed from 2160
           },
           fullscreen: { active: true },
           p2p_download: { active: false },
