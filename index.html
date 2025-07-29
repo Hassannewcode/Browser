@@ -17,16 +17,21 @@
             display: flex;
             overflow: hidden;
             background: #000;
+            /* Performance optimizations */
+            will-change: transform;
+            transform: translateZ(0);
         }
         
         .sidebar {
-            width: 220px;
+            width: 280px;
             background: #1a1a1a;
             border-right: 1px solid #333;
             padding: 15px;
             overflow-y: auto;
             flex-shrink: 0;
             color: white;
+            /* Performance optimizations */
+            contain: layout style paint;
         }
         
         .sidebar h4 { 
@@ -34,6 +39,18 @@
             color: #fff; 
             font-size: 16px;
             font-weight: 600;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section h5 {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
         
         .new-session-btn, .restart-btn {
@@ -52,7 +69,6 @@
         
         .restart-btn {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            margin-bottom: 15px;
         }
         
         .new-session-btn:hover, .restart-btn:hover { 
@@ -89,39 +105,45 @@
         }
         
         .setting-group {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
         
         .setting-group label {
             display: block;
             color: #ccc;
-            font-size: 11px;
-            margin-bottom: 4px;
+            font-size: 12px;
+            margin-bottom: 5px;
         }
         
         .setting-group input, .setting-group select {
             width: 100%;
-            padding: 5px;
+            padding: 6px;
             background: #1a1a1a;
             border: 1px solid #555;
-            border-radius: 3px;
+            border-radius: 4px;
             color: white;
-            font-size: 11px;
+            font-size: 12px;
         }
         
         .setting-group input[type="checkbox"] {
             width: auto;
-            margin-right: 6px;
+            margin-right: 8px;
         }
         
         .checkbox-group {
             display: flex;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         
-        .checkbox-group label {
+        .performance-badge {
+            background: #00ff88;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
             font-size: 10px;
+            font-weight: 600;
+            margin-left: 5px;
         }
         
         .session-item {
@@ -159,7 +181,7 @@
         
         .session-actions {
             display: flex;
-            gap: 4px;
+            gap: 5px;
         }
         
         .delete-btn, .restart-session-btn {
@@ -190,6 +212,10 @@
             position: relative;
             overflow: hidden;
             background: #000;
+            /* Maximum performance optimizations */
+            contain: layout style paint;
+            will-change: transform;
+            transform: translateZ(0);
         }
         
         #loading { 
@@ -223,16 +249,27 @@
             border: none; 
             display: none;
             background: #000;
-            /* Maximum performance optimizations */
+            /* Ultra performance optimizations for 60+ FPS */
             will-change: transform;
             transform: translateZ(0);
             backface-visibility: hidden;
             perspective: 1000px;
             image-rendering: optimizeSpeed;
             image-rendering: -webkit-optimize-contrast;
+            /* Hardware acceleration */
+            -webkit-transform: translateZ(0);
+            -moz-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            -o-transform: translateZ(0);
+            /* Smooth scrolling */
+            -webkit-overflow-scrolling: touch;
+            /* Disable text selection for performance */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
-        /* Scrollbar styling */
         .sidebar::-webkit-scrollbar {
             width: 6px;
         }
@@ -253,90 +290,130 @@
 </head>
 <body>
     <div class="sidebar">
-        <h4>⚡ High Performance Sessions</h4>
-        <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
-        <button class="restart-btn" onclick="restartCurrentSession()">🔄 Restart Current</button>
-        
-        <button class="settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
-        <div class="settings-panel" id="settings-panel">
-            <div class="setting-group">
-                <label>Initial URL:</label>
-                <input type="text" id="initialUrl" value="https://google.com">
-            </div>
-            
-            <div class="setting-group">
-                <label>Proxy Type:</label>
-                <select id="proxyType">
-                    <option value="anchor_residential">Residential</option>
-                    <option value="anchor_mobile">Mobile</option>
-                    <option value="custom">Custom</option>
-                </select>
-            </div>
-            
-            <div class="setting-group">
-                <label>Proxy Country:</label>
-                <select id="proxyCountry">
-                    <option value="us">United States</option>
-                    <option value="uk">United Kingdom</option>
-                    <option value="fr">France</option>
-                    <option value="it">Italy</option>
-                    <option value="jp">Japan</option>
-                    <option value="au">Australia</option>
-                    <option value="de">Germany</option>
-                    <option value="ca">Canada</option>
-                </select>
-            </div>
-            
-            <div class="setting-group">
-                <label>Viewport:</label>
-                <div style="display: flex; gap: 3px;">
-                    <input type="number" id="viewportWidth" value="1920" placeholder="W">
-                    <input type="number" id="viewportHeight" value="1080" placeholder="H">
+        <div class="section">
+            <h4>⚡ High Performance Sessions</h4>
+            <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
+            <button class="restart-btn" onclick="restartCurrentSession()">🔄 Restart Current</button>
+        </div>
+
+        <div class="section">
+            <button class="settings-toggle" onclick="toggleSettings()">⚙️ Session Settings</button>
+            <div class="settings-panel" id="settings-panel">
+                <div class="setting-group">
+                    <label>Initial URL:</label>
+                    <input type="text" id="initialUrl" value="https://google.com">
                 </div>
-            </div>
-            
-            <div class="setting-group">
-                <label>Profile:</label>
-                <input type="text" id="profileName" placeholder="Profile name">
-            </div>
-            
-            <div class="setting-group">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="proxy">
-                    <label for="proxy">Enable Proxy</label>
+                
+                <div class="setting-group">
+                    <label>FPS Target: <span class="performance-badge">60FPS</span></label>
+                    <select id="fps">
+                        <option value="25">25 FPS (Minimum)</option>
+                        <option value="30">30 FPS</option>
+                        <option value="45">45 FPS</option>
+                        <option value="60" selected>60 FPS (Recommended)</option>
+                        <option value="75">75 FPS</option>
+                        <option value="90">90 FPS</option>
+                        <option value="120">120 FPS (Ultra)</option>
+                    </select>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="recording">
-                    <label for="recording">Recording</label>
+                
+                <div class="setting-group">
+                    <label>Stream Quality: <span class="performance-badge">HIGH</span></label>
+                    <select id="quality">
+                        <option value="medium">Medium (Faster)</option>
+                        <option value="high" selected>High (Balanced)</option>
+                        <option value="ultra">Ultra (Slower)</option>
+                    </select>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="adblock" checked>
-                    <label for="adblock">Adblock</label>
+                
+                <div class="setting-group">
+                    <label>Buffer Size: <span class="performance-badge">MINIMAL</span></label>
+                    <select id="bufferSize">
+                        <option value="minimal" selected>Minimal (Lowest Delay)</option>
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large (Stable)</option>
+                    </select>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="popupBlocker" checked>
-                    <label for="popupBlocker">Block Popups</label>
+                
+                <div class="setting-group">
+                    <label>Proxy Type:</label>
+                    <select id="proxyType">
+                        <option value="anchor_residential">Anchor Residential</option>
+                        <option value="anchor_mobile">Anchor Mobile</option>
+                        <option value="custom">Custom</option>
+                    </select>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="captchaSolver" checked>
-                    <label for="captchaSolver">CAPTCHA Solver</label>
+                
+                <div class="setting-group">
+                    <label>Proxy Country:</label>
+                    <select id="proxyCountry">
+                        <option value="us">United States</option>
+                        <option value="uk">United Kingdom</option>
+                        <option value="fr">France</option>
+                        <option value="it">Italy</option>
+                        <option value="jp">Japan</option>
+                        <option value="au">Australia</option>
+                        <option value="de">Germany</option>
+                        <option value="fi">Finland</option>
+                        <option value="ca">Canada</option>
+                    </select>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="persistProfile">
-                    <label for="persistProfile">Persist Profile</label>
+                
+                <div class="setting-group">
+                    <label>Viewport Size:</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="viewportWidth" value="1920" placeholder="Width">
+                        <input type="number" id="viewportHeight" value="1080" placeholder="Height">
+                    </div>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="fullscreen">
-                    <label for="fullscreen">Fullscreen</label>
+                
+                <div class="setting-group">
+                    <label>Profile Name:</label>
+                    <input type="text" id="profileName" placeholder="Optional profile name">
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="p2pDownload">
-                    <label for="p2pDownload">P2P Downloads</label>
+                
+                <div class="setting-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="proxy">
+                        <label for="proxy">Enable Proxy (reduces speed)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="recording">
+                        <label for="recording">Enable Recording (reduces FPS)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="adblock" checked>
+                        <label for="adblock">Enable Adblock <span class="performance-badge">FAST</span></label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="popupBlocker" checked>
+                        <label for="popupBlocker">Block Popups <span class="performance-badge">FAST</span></label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="captchaSolver" checked>
+                        <label for="captchaSolver">CAPTCHA Solver</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="persistProfile">
+                        <label for="persistProfile">Persist Profile (slower startup)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="fullscreen">
+                        <label for="fullscreen">Fullscreen Mode</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="p2pDownload">
+                        <label for="p2pDownload">P2P Downloads</label>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div id="sessions-list"></div>
+
+        <div class="section">
+            <h5>Active Sessions</h5>
+            <div id="sessions-list"></div>
+        </div>
     </div>
 
     <div class="main-area">
@@ -366,6 +443,9 @@
         function getSettings() {
             return {
                 initialUrl: document.getElementById('initialUrl').value,
+                fps: parseInt(document.getElementById('fps').value),
+                quality: document.getElementById('quality').value,
+                bufferSize: document.getElementById('bufferSize').value,
                 proxyType: document.getElementById('proxyType').value,
                 proxyCountry: document.getElementById('proxyCountry').value,
                 viewportWidth: parseInt(document.getElementById('viewportWidth').value),
@@ -382,24 +462,11 @@
             };
         }
 
-        // Performance optimizations
-        const debounce = (func, wait) => {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        };
-
         function renderSessions() {
             const list = document.getElementById('sessions-list');
             list.innerHTML = sessions.map((session, index) => `
                 <div class="session-item ${currentSession === session ? 'active' : ''}" onclick="loadSession(${index})">
-                    <div class="session-name">${session.name}</div>
+                    <div class="session-name">${session.name} ${session.settings?.fps ? `<span class="performance-badge">${session.settings.fps}FPS</span>` : ''}</div>
                     <div class="session-time">${new Date(session.created).toLocaleString()}</div>
                     <div class="session-actions">
                         <button class="restart-session-btn" onclick="restartSession(${index}, event)">Restart</button>
@@ -422,6 +489,12 @@
                 iframeEl.src = '';
                 
                 const settings = getSettings();
+                
+                // Update loading text based on performance settings
+                loadingEl.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    Creating ${settings.fps}FPS session (${settings.quality} quality, ${settings.bufferSize} buffer)...
+                `;
                 
                 const response = await fetch('/api/create-session', {
                     method: 'POST',
@@ -476,6 +549,7 @@
             const session = sessions[index];
             
             try {
+                // Terminate old session
                 await fetch('/api/create-session', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
@@ -485,6 +559,7 @@
                 console.log('Error terminating session:', error);
             }
             
+            // Create new session with same settings
             const settings = session.settings || getSettings();
             
             try {
@@ -537,11 +612,19 @@
             
             currentSession = sessions[index];
             
+            // Ultra-fast loading optimizations
             iframe.onload = () => {
                 loading.style.display = 'none';
                 iframe.style.display = 'block';
+                
+                // Apply performance optimizations after load
+                iframe.style.imageRendering = 'optimizeSpeed';
+                iframe.style.transform = 'translateZ(0)';
             };
             
+            // Set high priority loading
+            iframe.loading = 'eager';
+            iframe.fetchPriority = 'high';
             iframe.src = currentSession.url;
             iframe.style.display = 'block';
             loading.style.display = 'none';
@@ -549,7 +632,7 @@
             renderSessions();
         }
 
-        const debouncedDeleteSession = debounce(async (index, event) => {
+        async function deleteSession(index, event) {
             event.stopPropagation();
             const session = sessions[index];
             const wasCurrentSession = currentSession === session;
@@ -580,30 +663,19 @@
             }
             
             renderSessions();
-        }, 100);
-
-        function deleteSession(index, event) {
-            debouncedDeleteSession(index, event);
         }
 
-        // Preload and optimize
+        // Initialize with performance optimizations
         document.addEventListener('DOMContentLoaded', () => {
             renderSessions();
+            
+            // Enable hardware acceleration
+            document.body.style.transform = 'translateZ(0)';
             
             if (sessions.length === 0) {
                 createNewSession();
             }
         });
-
-        // Performance monitoring
-        if ('performance' in window) {
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    const perfData = performance.getEntriesByType('navigation')[0];
-                    console.log('Page load time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
-                }, 0);
-            });
-        }
     </script>
 </body>
 </html>
