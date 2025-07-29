@@ -159,11 +159,7 @@
                 
                 const response = await fetch('/api/create-session', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache',
-                        'Priority': 'high'
-                    }
+                    headers: { 'Content-Type': 'application/json' }
                 });
                 
                 const data = await response.json();
@@ -192,20 +188,9 @@
 
         function loadSession(index) {
             currentSession = sessions[index];
-            
-            const iframe = document.getElementById('browser-iframe');
-            const loading = document.getElementById('loading');
-            
-            // Performance optimizations
-            iframe.onload = () => {
-                loading.style.display = 'none';
-                iframe.style.display = 'block';
-            };
-            
-            iframe.src = currentSession.url;
-            iframe.style.display = 'block';
-            loading.style.display = 'none';
-            
+            document.getElementById('browser-iframe').src = currentSession.url;
+            document.getElementById('browser-iframe').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
             renderSessions();
         }
 
@@ -213,6 +198,7 @@
             event.stopPropagation();
             const session = sessions[index];
             
+            // Try to terminate session via API
             try {
                 await fetch('/api/create-session', {
                     method: 'DELETE',
