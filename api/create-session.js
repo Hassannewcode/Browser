@@ -23,28 +23,24 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           session: {
             initial_url: settings.initialUrl || "https://google.com",
-            recording: { active: settings.recording === true }, // Disabled by default for performance
+            recording: { active: settings.recording === true },
             proxy: {
               type: settings.proxyType || "anchor_residential",
               country_code: settings.proxyCountry || "us",
-              active: settings.proxy === true // Disabled by default for performance
+              active: settings.proxy === true
             },
             timeout: {
               max_duration: 999999,
               idle_timeout: 999999
             },
             live_view: {
-              read_only: false,
-              fps: settings.fps || 60, // Configurable FPS
-              quality: settings.quality || "high", // High quality
-              buffer_size: settings.bufferSize || "minimal", // Minimal buffering
-              latency_mode: "ultra_low" // Ultra low latency
+              read_only: false
             }
           },
           browser: {
             profile: {
               name: settings.profileName || null,
-              persist: settings.persistProfile === true // Disabled by default for performance
+              persist: settings.persistProfile === true
             },
             adblock: { active: settings.adblock !== false },
             popup_blocker: { active: settings.popupBlocker !== false },
@@ -55,10 +51,7 @@ export default async function handler(req, res) {
               height: settings.viewportHeight || 1080
             },
             fullscreen: { active: settings.fullscreen === true },
-            p2p_download: { active: settings.p2pDownload === true },
-            // Performance optimizations
-            gpu_acceleration: { active: true },
-            hardware_acceleration: { active: true }
+            p2p_download: { active: settings.p2pDownload === true }
           }
         })
       });
