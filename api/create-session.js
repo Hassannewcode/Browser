@@ -1,174 +1,170 @@
-/**
- * @file This Next.js API route handles requests to create a highly optimized virtual browser session
- * via the Anchor Browser API. It prioritizes maximum performance (FPS, minimal delay/buffer)
- * while adhering to specific user requirements to keep certain resource-intensive features active.
- * * Key optimizations focus on enabling headless mode, streamlining viewport settings,
- * and configuring other browser behaviors for efficiency within the given constraints.
- * * Note: Achieving "ABSOLUTE MAXIMUM" performance with features like recording, P2P download,
- * and captcha solving simultaneously active involves inherent trade-offs, as these features
- * naturally consume resources and can introduce latency. The script aims for the best
- * possible performance given these explicit requirements.
- */
-
-// Import necessary modules (if any, though `fetch` is global in modern Node.js environments for Next.js API routes)
-// import fetch from 'node-fetch'; // Not strictly needed for Next.js API routes as fetch is globally available.
-
-/**
- * Main handler function for the API route.
- * @param {import('next').NextApiRequest} req - The incoming request object.
- * @param {import('next').NextApiResponse} res - The outgoing response object.
- */
 export default async function handler(req, res) {
-  // --- CORS Headers Configuration ---
-  // These headers allow requests from any origin ('*'), which is common for development
-  // or public APIs. For production, consider restricting 'Access-Control-Allow-Origin'
-  // to your specific frontend domains for enhanced security.
+  // Add CORS headers to allow requests from any origin.
+  // This is common for public APIs or development environments.
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS'); // Only allow POST for main logic, OPTIONS for pre-flight
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Allow Content-Type header for JSON bodies
+  // Specify allowed HTTP methods for CORS pre-flight requests.
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  // Specify allowed headers for CORS pre-flight requests.
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // --- Handle OPTIONS (Pre-flight) Request ---
-  // Browsers send an OPTIONS request before a "complex" actual request (like POST with custom headers).
-  // This needs to be handled to ensure CORS policies are respected.
+  // Handle pre-flight OPTIONS requests. Browsers send this before complex requests
+  // to check if the actual request is allowed by the server's CORS policy.
   if (req.method === 'OPTIONS') {
-    console.log('Received OPTIONS request for CORS pre-flight. Responding with 200 OK.');
-    return res.status(200).end(); // Respond with 200 OK and an empty body for pre-flight
+    return res.status(200).end(); // Respond with 200 OK for pre-flight
   }
 
-  // --- Enforce POST Method for Session Creation ---
-  // This API route is designed specifically for creating new browser sessions,
-  // which is typically a POST operation.
+  // Enforce that only POST requests are allowed for creating sessions.
+  // All other methods will receive a 405 Method Not Allowed response.
   if (req.method !== 'POST') {
-    console.warn(`Method Not Allowed: Received a ${req.method} request, but only POST is supported.`);
-    return res.status(405).json({ error: 'Method not allowed. Only POST requests are supported for creating sessions.' });
+    return res.status(405).json({ error: 'Method not allowed. Only POST requests are supported.' });
   }
 
-  // --- Main Logic: Creating Anchor Browser Session ---
   try {
-    console.log('Initiating request to Anchor API for session creation...');
+    console.log('Making request to Anchor API...');
 
-    // Define the Anchor API endpoint for creating sessions
+    // Define the Anchor API endpoint.
     const ANCHOR_API_URL = 'https://api.anchorbrowser.io/v1/sessions';
-    // Define your Anchor API Key. In a real-world application, this should be
-    // stored securely (e.g., in environment variables) and not hardcoded.
-    const ANCHOR_API_KEY = 'sk-3fdd23b3448e47e99ded3a4d531f84fe'; // Placeholder: Replace with actual secure key retrieval
+    
+    // IMPORTANT: Your Anchor API Key should be securely stored in environment variables
+    // (e.g., in a .env.local file for local development, and configured in Vercel project settings).
+    // DO NOT hardcode sensitive keys directly in your code for production.
+    const ANCHOR_API_KEY = process.env.ANCHOR_API_KEY; 
 
+    // Basic check to ensure the API key is available.
+    if (!ANCHOR_API_KEY) {
+      console.error('ANCHOR_API_KEY is not set in environment variables.');
+      return res.status(500).json({ error: 'Server configuration error: Anchor API Key is missing.' });
+    }
+
+    // Initiate the fetch request to the Anchor API.
     const response = await fetch(ANCHOR_API_URL, {
-      method: 'POST',
+      method: 'POST', // Always POST for creating sessions.
       headers: {
-        'anchor-api-key': ANCHOR_API_KEY,
-        'Content-Type': 'application/json' // Essential for sending JSON payload
+        'anchor-api-key': ANCHOR_API_KEY, // Your API key for authentication.
+        'Content-Type': 'application/json' // Indicate that the request body is JSON.
       },
-      // Construct the request body with detailed session and browser configurations.
-      // These parameters are tuned for maximum performance while keeping specified features "ON".
+      // Construct the JSON body for the Anchor API request.
+      // This structure closely matches your provided examples while applying optimizations.
       body: JSON.stringify({
         session: {
-          // Setting very high timeouts as per user's preference for potentially long-running sessions.
-          // Note: For 'no delay' in session termination for non-active sessions, shorter timeouts are generally better.
-          max_duration: 999999, // Max duration for the session in seconds (approx. 11.5 days)
-          idle_timeout: 999999, // Max idle time before session terminates in seconds (approx. 11.5 days)
-          
-          // Recording: Enabled as requested ("ALL ON"). This will add continuous overhead
-          // as the browser's activity is captured. This inherently impacts "no buffer" due to I/O.
-          recording: { active: true },
-          
-          // Initial URL for the browser session. Mandatory.
+          // Initial URL for the browser session.
           initial_url: "https://anchorbrowser.io",
           
-          // Live View: Set to read-only. While 'live_view' itself consumes resources for streaming,
-          // 'read_only: true' minimizes interactivity overhead from the live view perspective.
-          live_view: { read_only: true },
+          // Recording: Set to active as per your "ALL ON" requirement.
+          // Note: Recording adds continuous overhead (CPU/I/O) as browser activity is captured,
+          // which can slightly impact "no buffer" and "max FPS" goals.
+          recording: { active: true },
           
-          // Proxy Configuration: Using Anchor's residential proxy, active as required.
-          // Proxies introduce an additional network hop, which can add minimal latency
-          // but is often necessary for specific use cases (e.g., bypassing geo-restrictions).
+          // Proxy configuration: Using Anchor's residential proxy, active as specified.
+          // Proxies can introduce minor network latency but are often essential for specific use cases.
           proxy: {
             type: "anchor_residential",
             country_code: "us",
             active: true
           },
+          
+          // Timeout settings: Set to very high values as per your original examples.
+          // For truly "no delay" in session termination, shorter timeouts for idle
+          // sessions would be more efficient, but keeping high as requested.
+          timeout: {
+            max_duration: 999999, // Max duration in seconds (approx. 11.5 days).
+            idle_timeout: 999999  // Max idle time in seconds before termination.
+          },
+          
+          // Live View: Set to 'read_only: false' as per your second example.
+          // Note: An active live view, especially one that is not read-only, consumes
+          // network bandwidth and processing resources for streaming, which can
+          // affect overall "no buffer" performance.
+          live_view: { read_only: false }
         },
         browser: {
-          // --- ABSOLUTE CRITICAL FOR MAX PERFORMANCE, NO DELAY, NO BUFFER, MAX FPS ---
-          // Headless Mode: Set to true. This is the single most effective optimization.
-          // The browser will run without a graphical user interface, drastically reducing
-          // CPU and (virtual) GPU consumption related to rendering, leading to faster
-          // execution and response times for programmatic control.
-          headless: { active: true },
-          
-          // Fullscreen: Enabled as requested ("ALL ON"). In headless mode, this setting
-          // has negligible performance impact as there's no physical screen to maximize.
-          fullscreen: { active: true },
-          
-          // P2P Download: Enabled as requested ("ALL ON"). This allows peer-to-peer connections.
-          // If the browser engages in active P2P transfers, it will consume network bandwidth
-          // and CPU resources, which can directly lead to "buffering" and "delays" from
-          // a network and processing standpoint for other browser tasks.
-          p2p_download: { active: true }, 
-          
-          // Captcha Solver: Enabled as requested ("ALL ON"). This feature involves an
-          // automated process to detect and solve captchas. This process itself takes
-          // time, can involve external API calls, and consumes resources, directly
-          // introducing "delay" when a captcha challenge is encountered.
-          captcha_solver: { active: true }, 
-
-          // Viewport: Setting to a commonly used Full HD resolution (1920x1080).
-          // While not as impactful as in headed mode, rendering internal browser
-          // elements at very high resolutions (e.g., 4K) can still add minor overhead.
-          // This is a good balance for typical automation needs.
-          viewport: {
-            width: 1920, 
-            height: 1080 
+          // Profile configuration: A unique name for the session profile.
+          // 'persist: false' is crucial for "MAX performance" as it ensures a clean,
+          // fast-loading browser instance for each session, avoiding delays from
+          // loading large, persistent profile data.
+          profile: {
+            name: "session-profile-" + Date.now(), // Dynamic name for uniqueness.
+            persist: false // Do not persist profile for faster startup.
           },
           
-          // Adblock and Popup Blocker: Kept active. These are beneficial for performance
-          // by preventing the loading of unnecessary and often resource-intensive ads
-          // and pop-ups, thus contributing to "no buffer" and "max FPS" by reducing page load.
+          // Adblock: Active. This is beneficial for "MAX performance, no buffer, no delay"
+          // as it prevents loading of ads and trackers, reducing page weight and processing.
           adblock: { active: true },
+          
+          // Popup Blocker: Active. Similar to adblock, helps reduce unwanted content
+          // and potential resource consumption from pop-up windows.
           popup_blocker: { active: true },
           
-          // Browser Profile: Setting persist to false. This ensures a clean browser state
-          // for each new session, preventing potential delays from loading and processing
-          // large, persistent profile data. A unique name is still good for logging/identification.
-          profile: {
-            name: "session-profile-" + Date.now(), // Unique name for the session profile
-            persist: false // Do not persist the profile after the session ends for faster restarts
+          // Captcha Solver: Active as per your "ALL ON" requirement.
+          // Note: This feature introduces inherent delays when a captcha is encountered,
+          // as the solving process (which might involve external services) takes time.
+          // It directly impacts the "no delay" goal during captcha resolution.
+          captcha_solver: { active: true },
+          
+          // Headless Mode: Set to 'active: true'. THIS IS THE MOST CRITICAL SETTING
+          // for achieving "MAX FPS, no delay, no buffer, ABSOLUTE MAXIMUM" performance.
+          // Running headless means the browser operates without a visible graphical interface,
+          // drastically reducing CPU and (virtual) GPU resource consumption for rendering.
+          headless: { active: true },
+          
+          // Viewport: Optimized for a common Full HD resolution (1920x1080).
+          // While the original example had 4K (3840x2160), a smaller resolution
+          // like 1920x1080 still provides high fidelity while being less resource-intensive
+          // for internal rendering calculations, contributing to better FPS.
+          viewport: {
+            width: 1920,
+            height: 1080
           },
-          extensions: [] // No specific extensions loaded, minimizing overhead
+          
+          // Fullscreen: Set to 'active: true' as per your "ALL ON" requirement.
+          // In headless mode, this has minimal practical performance impact as there's
+          // no display to maximize, but it's included for strict adherence to your request.
+          fullscreen: { active: true },
+          
+          // P2P Download: Set to 'active: true' as per your "ALL ON" requirement.
+          // Note: Enabling P2P capabilities can consume significant network bandwidth
+          // and CPU resources if active transfers occur, directly impacting "no buffer"
+          // and "no delay" for other browser operations.
+          p2p_download: { active: true },
+          
+          // Extensions: An empty array, meaning no browser extensions are loaded,
+          // which minimizes startup time and resource consumption.
+          extensions: []
         }
       })
     });
     
-    // --- API Response Handling ---
-    console.log(`Anchor API Response Status: ${response.status}`);
-    const data = await response.json(); // Attempt to parse response body as JSON
-    console.log('Anchor API Response Data:', data);
+    // Log the response status from the Anchor API for debugging.
+    console.log('Response status from Anchor API:', response.status);
     
-    // Check if the API call was successful (status code 2xx)
+    // Parse the JSON response body from the Anchor API.
+    const responseData = await response.json();
+    console.log('Response data from Anchor API:', responseData);
+    
+    // Check if the HTTP response status indicates an error (e.g., 4xx or 5xx).
     if (!response.ok) {
-      // If the Anchor API returned an error (e.g., 4xx or 5xx), propagate it.
-      // The 'data' object should contain the error details from their API.
-      console.error('Error from Anchor API:', data);
+      // If the Anchor API returned an error, log it and send a detailed error response.
+      console.error('Error received from Anchor API:', responseData);
       return res.status(response.status).json({ 
-        error: data.message || 'Unknown error from Anchor API', // Use their error message if available
-        details: data // Include full error data for debugging
+        error: responseData.message || 'Unknown error from Anchor API', // Use their error message if available.
+        details: responseData // Include full response data for more context.
       });
     }
     
-    // Send the successful response data from Anchor API back to the client
-    res.json(data);
-    console.log('Anchor API session created successfully and response sent.');
+    // If the request was successful, send the data received from Anchor API back to the client.
+    // The HTML frontend expects `live_view_url` and `id` at the top level of this response.
+    res.json(responseData);
+    console.log('Anchor API session created successfully and response sent to client.');
 
   } catch (error) {
-    // --- Error Handling for Network Issues or Malformed Responses ---
-    // This block catches errors that occur before or during the fetch operation,
-    // such as network connectivity issues, DNS resolution problems, or invalid JSON responses.
-    console.error('Caught an error during Anchor API request or response processing:', error);
-    // Respond with a 500 Internal Server Error for unhandled exceptions
+    // Catch any unexpected errors during the fetch operation (e.g., network issues, JSON parsing errors).
+    console.error('Caught an unhandled error during Anchor API request or response processing:', error);
+    // Send a 500 Internal Server Error response.
     res.status(500).json({ 
       error: 'Failed to communicate with Anchor API or process response.', 
-      message: error.message, // Provide the error message for debugging
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined // Include stack in dev for debugging
+      message: error.message, // Provide the error message.
+      // Include stack trace only in development environment for security.
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
     });
   }
 }
