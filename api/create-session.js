@@ -23,32 +23,12 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         session: {
-          initial_url: "https://google.com",
-          recording: { active: false }, // Disabled for max performance
-          proxy: {
-            type: "anchor_residential",
-            country_code: "us",
-            active: false // Disabled for max speed
-          },
-          timeout: {
-            max_duration: 999999,
-            idle_timeout: 999999
-          },
-          live_view: {
-            read_only: false
-          }
+          max_duration: 999999,
+          idle_timeout: 999999
         },
         browser: {
-          profile: {
-            persist: false // Disabled for speed
-          },
-          adblock: { active: true }, // Enabled for faster loading
-          popup_blocker: { active: true }, // Enabled for performance
-          captcha_solver: { active: true },
           headless: { active: false },
-          viewport: { width: 1920, height: 1080 }, // Higher resolution for better performance
-          fullscreen: { active: false },
-          p2p_download: { active: false } // Disabled for performance
+          viewport: { width: 1920, height: 1080 } // Higher resolution for better performance
         }
       })
     });
