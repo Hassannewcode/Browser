@@ -3,179 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anchor Browser Dynamic Session</title>
-    <!-- Tailwind CSS CDN for modern styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Anchor Browser Session</title>
     <style>
-        /* Ensure the body and html take full height */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* Hide scrollbars if iframe is full screen */
-            font-family: "Inter", sans-serif;
-            background-color: #f0f4f8; /* Light background */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start; /* Align content to the top */
-        }
-        /* Container for the button and message */
-        .control-panel {
-            padding: 1rem;
-            width: 100%;
-            max-width: 1200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            background-color: #ffffff;
-            border-bottom-left-radius: 0.5rem;
-            border-bottom-right-radius: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            z-index: 10; /* Ensure it's above the iframe if positioned absolutely */
-        }
-        /* Style for the iframe to remove borders and ensure it fills the available space */
-        iframe {
-            border: none; /* No border as requested */
-            width: 100%; /* Fill parent width */
-            flex-grow: 1; /* Allow iframe to take remaining vertical space */
-            display: block; /* Remove extra space below iframe */
-            background-color: #e2e8f0; /* Light background for initial load/empty state */
-            /* Add flex properties to center content for initial message */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4a5568;
-            font-size: 1.125rem;
-            text-align: center;
-        }
-        /* Style for the message displayed within the iframe when empty */
-        .iframe-placeholder-message {
-            padding: 1rem;
-            font-style: italic;
-            color: #6b7280;
-        }
+        body { margin: 0; padding: 0; height: 100vh; font-family: Arial, sans-serif; }
+        #loading { display: flex; justify-content: center; align-items: center; height: 100vh; font-size: 18px; }
+        #browser-iframe { width: 100%; height: 100vh; border: none; display: none; }
     </style>
 </head>
 <body>
-    <div class="control-panel">
-        <button id="callApiButton" class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-300 ease-in-out w-full sm:w-auto">
-            Call API to Start New Session
-        </button>
-        <p id="statusMessage" class="text-sm text-gray-700 text-center">Click the button to generate a new Anchor Browser session.</p>
-    </div>
-
-    <!-- The iframe element, its src will be updated dynamically -->
-    <iframe id="anchorBrowserIframe"
-            src=""
-            title="Anchor Browser Live View"
-            allowfullscreen
-            sandbox="allow-same-origin allow-scripts allow-popups allow-top-navigation-by-user-activation"
-            allow="clipboard-read; clipboard-write">
-        <p class="iframe-placeholder-message">Click "Call API to Start New Session" to load the live view here.</p>
-    </iframe>
+    <div id="loading">Creating new browser session...</div>
+    <iframe id="browser-iframe" sandbox="allow-same-origin allow-scripts" allow="clipboard-read; clipboard-write"></iframe>
 
     <script>
-        // Get references to the DOM elements
-        const callApiButton = document.getElementById('callApiButton');
-        const statusMessage = document.getElementById('statusMessage');
-        const anchorBrowserIframe = document.getElementById('anchorBrowserIframe');
-
-        /**
-         * Asynchronously calls the Anchor Browser API to create a new session.
-         * Updates the iframe's source with the live_view_url from the response.
-         */
-        async function callAnchorBrowserApi() {
-            // Update status message and disable the button
-            statusMessage.textContent = 'Creating session... Please wait.';
-            callApiButton.disabled = true;
-            anchorBrowserIframe.src = ""; // Clear iframe src while loading
-
-            const url = 'https://api.anchorbrowser.io/v1/sessions';
-            const options = {
-                method: 'POST',
-                headers: {
-                    // IMPORTANT: This API key is exposed directly in client-side code.
-                    // In a production application, you should NEVER expose sensitive API keys this way.
-                    // Instead, use a backend proxy server to make API calls securely.
-                    'anchor-api-key': 'sk-3fdd23b3448e47e99ded3a4d531f84fe',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    session: {
-                        max_duration: 999999,
-                        idle_timeout: 999999,
-                        proxy: {
-                            type: "anchor_residential" // Requesting a residential proxy
-                        }
-                    },
-                    browser: {
-                        headless: {
-                            active: false // Ensure headless is false to get live_view_url
-                        }
-                    }
-                })
-            };
-
+        async function createNewSession() {
             try {
-                const response = await fetch(url, options);
-
-                // Log response status and headers for debugging
-                console.log('Fetch Response Status:', response.status);
-                console.log('Fetch Response Headers:', [...response.headers.entries()]);
-
-                if (!response.ok) {
-                    // Try to parse error data if response is not OK, but still reachable
-                    let errorData = {};
-                    try {
-                        errorData = await response.json();
-                    } catch (jsonError) {
-                        console.warn('Could not parse error response as JSON:', jsonError);
-                        errorData = { message: response.statusText || 'Unknown error' };
-                    }
-                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${JSON.stringify(errorData)}`);
-                }
-
+                const response = await fetch('http://localhost:3000/create-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
                 const data = await response.json();
-                console.log('API Response Data:', data); // Log the full response
-
-                // Extract and use the live_view_url
+                
                 if (data.data && data.data.live_view_url) {
-                    const liveViewUrl = data.data.live_view_url;
-                    console.log('Live View URL:', liveViewUrl);
-                    anchorBrowserIframe.src = liveViewUrl; // Update iframe source
-                    statusMessage.textContent = `Session created! Loading: ${liveViewUrl}`;
-                    statusMessage.classList.remove('text-red-700');
-                    statusMessage.classList.add('text-green-700');
+                    document.getElementById('browser-iframe').src = data.data.live_view_url;
+                    document.getElementById('browser-iframe').style.display = 'block';
+                    document.getElementById('loading').style.display = 'none';
                 } else {
-                    statusMessage.textContent = 'Error: Live View URL not found in API response.';
-                    statusMessage.classList.remove('text-green-700');
-                    statusMessage.classList.add('text-red-700');
+                    throw new Error('No live_view_url received');
                 }
-
             } catch (error) {
-                console.error('Error during fetch operation:', error);
-                // Enhanced error message specifically for the 500 OPTIONS error
-                if (error instanceof TypeError && error.message === 'Failed to fetch') {
-                    statusMessage.innerHTML = `
-                        <span class="font-bold text-red-700">Error: Failed to fetch.</span><br>
-                        This error usually means the browser could not connect to the API. Based on previous observations of a "500 Internal Server Error" for the OPTIONS request, the Anchor Browser API server is likely failing to respond correctly to the browser's preflight request. This is a <span class="font-semibold">server-side issue</span> with the Anchor Browser API, which cannot be fixed from client-side code.<br>
-                        Please open your browser's <span class="font-semibold">Developer Tools (F12)</span> and check the <span class="font-semibold">Console</span> and <span class="font-semibold">Network</span> tabs for more specific error details. You should <span class="font-semibold">contact Anchor Browser support</span> to resolve the 500 error on their OPTIONS endpoint.
-                    `;
-                } else {
-                    statusMessage.textContent = `Error: ${error.message}. Please check the browser console for more details.`;
-                }
-                statusMessage.classList.remove('text-green-700');
-                statusMessage.classList.add('text-red-700');
-            } finally {
-                callApiButton.disabled = false; // Re-enable the button
+                console.error('Error:', error);
+                document.getElementById('loading').textContent = 'Error creating session. Please refresh.';
             }
         }
 
-        // Attach event listener to the button
-        callApiButton.addEventListener('click', callAnchorBrowserApi);
+        createNewSession();
     </script>
 </body>
 </html>
