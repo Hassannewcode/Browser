@@ -3,200 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anchor Browser Session - Max Performance</title>
+    <title>Anchor Browser Session</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body { 
+            margin: 0; 
+            padding: 0; 
             height: 100vh; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            display: flex;
-            overflow: hidden;
-            background: #000;
+            font-family: Arial, sans-serif; 
+            display: flex; 
         }
         
         .sidebar {
-            width: 280px;
-            background: #1a1a1a;
-            border-right: 1px solid #333;
+            width: 220px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
             padding: 15px;
             overflow-y: auto;
             flex-shrink: 0;
-            color: white;
+            box-sizing: border-box;
         }
         
         .sidebar h4 { 
             margin: 0 0 15px 0; 
-            color: #fff; 
+            color: #495057; 
             font-size: 16px;
-            font-weight: 600;
         }
         
-        .section {
-            margin-bottom: 25px;
-        }
-        
-        .section h5 {
-            color: #999;
-            font-size: 12px;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-        }
-        
-        .new-session-btn, .restart-btn {
+        .new-session-btn {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            background: #007bff;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             font-size: 14px;
-            font-weight: 500;
-            transition: transform 0.1s ease;
+            box-sizing: border-box;
         }
         
-        .restart-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .new-session-btn:hover, .restart-btn:hover { 
-            transform: translateY(-1px);
-        }
-        
-        .new-session-btn:active, .restart-btn:active {
-            transform: translateY(0);
-        }
-        
-        .settings-toggle {
-            width: 100%;
-            padding: 8px;
-            background: #2a2a2a;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            font-size: 12px;
-        }
-        
-        .settings-panel {
-            display: none;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .settings-panel.active {
-            display: block;
-        }
-        
-        .setting-group {
-            margin-bottom: 15px;
-        }
-        
-        .setting-group label {
-            display: block;
-            color: #ccc;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-        
-        .setting-group input, .setting-group select {
-            width: 100%;
-            padding: 6px;
-            background: #1a1a1a;
-            border: 1px solid #555;
-            border-radius: 4px;
-            color: white;
-            font-size: 12px;
-        }
-        
-        .setting-group input[type="checkbox"] {
-            width: auto;
-            margin-right: 8px;
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
+        .new-session-btn:hover { 
+            background: #0056b3; 
         }
         
         .session-item {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 12px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
             margin-bottom: 8px;
             cursor: pointer;
             font-size: 13px;
-            transition: all 0.1s ease;
+            box-sizing: border-box;
         }
         
         .session-item:hover { 
-            background: #333;
-            border-color: #555;
+            background: #f8f9fa; 
         }
         
         .session-item.active { 
-            border-color: #667eea; 
-            background: #1e2a4a;
+            border-color: #007bff; 
+            background: #e7f1ff; 
         }
         
         .session-name { 
             font-weight: 500; 
-            margin-bottom: 4px;
-            color: #fff;
+            margin-bottom: 4px; 
         }
         
         .session-time { 
-            color: #999; 
+            color: #6c757d; 
             font-size: 11px; 
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         
-        .session-actions {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .delete-btn, .restart-session-btn {
+        .delete-btn {
             background: #dc3545;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 3px;
             padding: 4px 8px;
             cursor: pointer;
             font-size: 11px;
-            transition: background 0.1s ease;
-        }
-        
-        .restart-session-btn {
-            background: #28a745;
         }
         
         .delete-btn:hover { 
             background: #c82333; 
         }
         
-        .restart-session-btn:hover {
-            background: #218838;
-        }
-        
         .main-area { 
             flex: 1; 
-            position: relative;
-            overflow: hidden;
-            background: #000;
+            position: relative; 
         }
         
         #loading { 
@@ -204,24 +101,7 @@
             justify-content: center; 
             align-items: center; 
             height: 100vh; 
-            font-size: 18px;
-            color: #fff;
-            background: #000;
-        }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #333;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            font-size: 18px; 
         }
         
         #browser-iframe { 
@@ -229,7 +109,7 @@
             height: 100vh; 
             border: none; 
             display: none;
-            background: #000;
+            /* Maximum performance optimizations */
             will-change: transform;
             transform: translateZ(0);
             backface-visibility: hidden;
@@ -237,126 +117,17 @@
             image-rendering: optimizeSpeed;
             image-rendering: -webkit-optimize-contrast;
         }
-        
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .sidebar::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-        
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 3px;
-        }
-        
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <div class="section">
-            <h4>⚡ High Performance Sessions</h4>
-            <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
-            <button class="restart-btn" onclick="restartCurrentSession()">🔄 Restart Current</button>
-        </div>
-
-        <div class="section">
-            <button class="settings-toggle" onclick="toggleSettings()">⚙️ Session Settings</button>
-            <div class="settings-panel" id="settings-panel">
-                <div class="setting-group">
-                    <label>Initial URL:</label>
-                    <input type="text" id="initialUrl" value="https://google.com">
-                </div>
-                
-                <div class="setting-group">
-                    <label>Proxy Type:</label>
-                    <select id="proxyType">
-                        <option value="anchor_residential">Anchor Residential</option>
-                        <option value="anchor_mobile">Anchor Mobile</option>
-                        <option value="custom">Custom</option>
-                    </select>
-                </div>
-                
-                <div class="setting-group">
-                    <label>Proxy Country:</label>
-                    <select id="proxyCountry">
-                        <option value="us">United States</option>
-                        <option value="uk">United Kingdom</option>
-                        <option value="fr">France</option>
-                        <option value="it">Italy</option>
-                        <option value="jp">Japan</option>
-                        <option value="au">Australia</option>
-                        <option value="de">Germany</option>
-                        <option value="fi">Finland</option>
-                        <option value="ca">Canada</option>
-                    </select>
-                </div>
-                
-                <div class="setting-group">
-                    <label>Viewport Size:</label>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="number" id="viewportWidth" value="1920" placeholder="Width">
-                        <input type="number" id="viewportHeight" value="1080" placeholder="Height">
-                    </div>
-                </div>
-                
-                <div class="setting-group">
-                    <label>Profile Name:</label>
-                    <input type="text" id="profileName" placeholder="Optional profile name">
-                </div>
-                
-                <div class="setting-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="proxy">
-                        <label for="proxy">Enable Proxy</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="recording">
-                        <label for="recording">Enable Recording</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="adblock" checked>
-                        <label for="adblock">Enable Adblock</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="popupBlocker" checked>
-                        <label for="popupBlocker">Block Popups</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="captchaSolver" checked>
-                        <label for="captchaSolver">CAPTCHA Solver</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="persistProfile">
-                        <label for="persistProfile">Persist Profile</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="fullscreen">
-                        <label for="fullscreen">Fullscreen Mode</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="p2pDownload">
-                        <label for="p2pDownload">P2P Downloads</label>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h5>Active Sessions</h5>
-            <div id="sessions-list"></div>
-        </div>
+        <h4>Sessions</h4>
+        <button class="new-session-btn" onclick="createNewSession()">+ New Session</button>
+        <div id="sessions-list"></div>
     </div>
 
     <div class="main-area">
-        <div id="loading">
-            <div class="loading-spinner"></div>
-            Creating high-performance browser session...
-        </div>
+        <div id="loading">Creating new browser session...</div>
         <iframe id="browser-iframe" 
                 sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-top-navigation allow-presentation" 
                 allow="clipboard-read; clipboard-write; camera; microphone; geolocation; accelerometer; gyroscope; magnetometer; payment; usb; web-share; fullscreen"
@@ -369,31 +140,6 @@
     <script>
         let sessions = JSON.parse(localStorage.getItem('anchor-sessions') || '[]');
         let currentSession = null;
-        let isCreatingSession = false;
-
-        function toggleSettings() {
-            const panel = document.getElementById('settings-panel');
-            panel.classList.toggle('active');
-        }
-
-        function getSettings() {
-            return {
-                initialUrl: document.getElementById('initialUrl').value,
-                proxyType: document.getElementById('proxyType').value,
-                proxyCountry: document.getElementById('proxyCountry').value,
-                viewportWidth: parseInt(document.getElementById('viewportWidth').value),
-                viewportHeight: parseInt(document.getElementById('viewportHeight').value),
-                profileName: document.getElementById('profileName').value,
-                proxy: document.getElementById('proxy').checked,
-                recording: document.getElementById('recording').checked,
-                adblock: document.getElementById('adblock').checked,
-                popupBlocker: document.getElementById('popupBlocker').checked,
-                captchaSolver: document.getElementById('captchaSolver').checked,
-                persistProfile: document.getElementById('persistProfile').checked,
-                fullscreen: document.getElementById('fullscreen').checked,
-                p2pDownload: document.getElementById('p2pDownload').checked
-            };
-        }
 
         function renderSessions() {
             const list = document.getElementById('sessions-list');
@@ -401,27 +147,15 @@
                 <div class="session-item ${currentSession === session ? 'active' : ''}" onclick="loadSession(${index})">
                     <div class="session-name">${session.name}</div>
                     <div class="session-time">${new Date(session.created).toLocaleString()}</div>
-                    <div class="session-actions">
-                        <button class="restart-session-btn" onclick="restartSession(${index}, event)">Restart</button>
-                        <button class="delete-btn" onclick="deleteSession(${index}, event)">Delete</button>
-                    </div>
+                    <button class="delete-btn" onclick="deleteSession(${index}, event)">Delete</button>
                 </div>
             `).join('');
         }
 
         async function createNewSession() {
-            if (isCreatingSession) return;
-            isCreatingSession = true;
-            
             try {
-                const loadingEl = document.getElementById('loading');
-                const iframeEl = document.getElementById('browser-iframe');
-                
-                loadingEl.style.display = 'flex';
-                iframeEl.style.display = 'none';
-                iframeEl.src = '';
-                
-                const settings = getSettings();
+                document.getElementById('loading').style.display = 'flex';
+                document.getElementById('browser-iframe').style.display = 'none';
                 
                 const response = await fetch('/api/create-session', {
                     method: 'POST',
@@ -429,13 +163,8 @@
                         'Content-Type': 'application/json',
                         'Cache-Control': 'no-cache',
                         'Priority': 'high'
-                    },
-                    body: JSON.stringify({ settings })
+                    }
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
                 
                 const data = await response.json();
                 
@@ -444,8 +173,7 @@
                         name: `Session ${sessions.length + 1}`,
                         url: data.data.live_view_url,
                         id: data.data.id,
-                        created: new Date().toISOString(),
-                        settings: settings
+                        created: new Date().toISOString()
                     };
                     
                     sessions.push(session);
@@ -454,89 +182,21 @@
                     loadSession(sessions.length - 1);
                     renderSessions();
                 } else {
-                    throw new Error('No live_view_url received from API');
+                    throw new Error('No live_view_url received');
                 }
             } catch (error) {
-                console.error('Session creation error:', error);
-                document.getElementById('loading').innerHTML = `
-                    <div style="text-align: center;">
-                        <div style="color: #dc3545; margin-bottom: 10px;">⚠️ Error creating session</div>
-                        <div style="font-size: 14px; color: #999;">${error.message}</div>
-                        <button onclick="createNewSession()" style="margin-top: 15px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Retry</button>
-                    </div>
-                `;
-            } finally {
-                isCreatingSession = false;
-            }
-        }
-
-        async function restartSession(index, event) {
-            event.stopPropagation();
-            
-            const session = sessions[index];
-            
-            try {
-                await fetch('/api/create-session', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: session.id })
-                });
-            } catch (error) {
-                console.log('Error terminating session:', error);
-            }
-            
-            const settings = session.settings || getSettings();
-            
-            try {
-                const response = await fetch('/api/create-session', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Priority': 'high'
-                    },
-                    body: JSON.stringify({ settings })
-                });
-                
-                const data = await response.json();
-                
-                if (data.data && data.data.live_view_url) {
-                    sessions[index] = {
-                        ...session,
-                        url: data.data.live_view_url,
-                        id: data.data.id,
-                        created: new Date().toISOString()
-                    };
-                    
-                    localStorage.setItem('anchor-sessions', JSON.stringify(sessions));
-                    
-                    if (currentSession === session) {
-                        loadSession(index);
-                    }
-                    renderSessions();
-                }
-            } catch (error) {
-                console.error('Restart error:', error);
-            }
-        }
-
-        async function restartCurrentSession() {
-            if (!currentSession) {
-                createNewSession();
-                return;
-            }
-            
-            const index = sessions.findIndex(s => s.id === currentSession.id);
-            if (index !== -1) {
-                await restartSession(index, { stopPropagation: () => {} });
+                console.error('Error:', error);
+                document.getElementById('loading').textContent = 'Error creating session. Please refresh.';
             }
         }
 
         function loadSession(index) {
+            currentSession = sessions[index];
+            
             const iframe = document.getElementById('browser-iframe');
             const loading = document.getElementById('loading');
             
-            currentSession = sessions[index];
-            
+            // Performance optimizations
             iframe.onload = () => {
                 loading.style.display = 'none';
                 iframe.style.display = 'block';
@@ -552,7 +212,6 @@
         async function deleteSession(index, event) {
             event.stopPropagation();
             const session = sessions[index];
-            const wasCurrentSession = currentSession === session;
             
             try {
                 await fetch('/api/create-session', {
@@ -567,29 +226,19 @@
             sessions.splice(index, 1);
             localStorage.setItem('anchor-sessions', JSON.stringify(sessions));
             
-            if (wasCurrentSession) {
+            if (currentSession === session) {
                 currentSession = null;
-                const iframe = document.getElementById('browser-iframe');
-                iframe.style.display = 'none';
-                iframe.src = '';
+                document.getElementById('browser-iframe').style.display = 'none';
                 document.getElementById('loading').style.display = 'flex';
-                document.getElementById('loading').innerHTML = `
-                    <div class="loading-spinner"></div>
-                    Creating high-performance browser session...
-                `;
+                document.getElementById('loading').textContent = 'Creating new browser session...';
             }
             
             renderSessions();
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            renderSessions();
-            
-            if (sessions.length === 0) {
-                createNewSession();
-            }
-        });
+        // Initialize - keep original behavior
+        renderSessions();
+        createNewSession();
     </script>
 </body>
 </html>
