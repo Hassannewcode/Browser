@@ -1,25 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Anchor Cloud Browser with Proxy</title>
-<style>
-  html, body {
-    margin: 0; padding: 0; height: 100vh; overflow: hidden;
-  }
-  iframe {
-    width: 100vw;
-    height: 100vh;
-    border: none;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Browser</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Apply Inter font and basic styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent body scrollbars */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align items to the top to make space for the button */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            background-color: #f0f2f5; /* Light background */
+        }
+
+        /* Styling for the control panel at the top */
+        #control-panel {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e2e8f0; /* gray-200 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 10; /* Ensure it stays on top */
+        }
+
+        /* Styling for the new session button */
+        #new-session-button {
+            background-color: #4299e1; /* blue-500 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 600; /* font-semibold */
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border: none;
+            outline: none;
+        }
+
+        #new-session-button:hover:not(:disabled) {
+            background-color: #3182ce; /* blue-600 */
+        }
+
+        #new-session-button:disabled {
+            background-color: #a0aec0; /* gray-400 */
+            cursor: not-allowed;
+        }
+
+        /* Styling for the loading message */
+        #loading-message {
+            font-size: 1.25rem; /* text-xl */
+            color: #4a5568; /* gray-700 */
+            margin-top: 2rem; /* Add some space from the control panel */
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* Styling for the error message */
+        #error-message {
+            font-size: 1.125rem; /* text-lg */
+            color: #e53e3e; /* red-600 */
+            background-color: #fed7d7; /* red-100 */
+            padding: 1rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid #fc8181; /* red-400 */
+            display: none; /* Hidden by default */
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        /* Styling for the iframe container to ensure it takes full available space */
+        #iframe-container {
+            flex-grow: 1; /* Allow iframe container to take remaining vertical space */
+            width: 100vw; /* Full viewport width */
+            position: relative; /* Changed from absolute to relative to flow with content */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff; /* White background for iframe area */
+            visibility: hidden; /* Hidden by default until content is ready */
+        }
+
+        #cloud-browser-iframe {
+            border: 0px;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
-  <iframe
-    src="https://anchor.browser.io/embed?apikey=sk-3fdd23b3448e47e99ded3a4d531f84fe&url=about:blank&proxyHost=206.72.206.45&proxyPort=1080&proxyType=socks5&proxyUser=A1&proxyPass=A1"
-    allowfullscreen
-    allow="clipboard-read; clipboard-write; autoplay; fullscreen; geolocation; microphone; camera"
-    tabindex="0"
-  ></iframe>
+    <div id="control-panel">
+        <button id="new-session-button" class="rounded-md">Create New Session</button>
+    </div>
+
+    <div id="loading-message" class="text-xl text-gray-700">Loading cloud browser...</div>
+    <div id="error-message" class="hidden"></div>
+    <div id="iframe-container"></div>
+
+    <script>
+        // Set the API key provided by the user
+        const API_KEY = 'sk-3fdd23b3448e47e99ded3a4d531f84fe';
+
+        // Get references to UI elements
+        const loadingMessage = document.getElementById('loading-message');
+        const errorMessage = document.getElementById('error-message');
+        const iframeContainer = document.getElementById('iframe-container');
+        const newSessionButton = document.getElementById('new-session-button');
+
+        // Variable to store the interval ID for pinging, so it can be cleared
+        let pingIntervalId = null;
+
+        // Function to display messages to the user
+        function displayMessage(message, isError = false) {
+            if (isError) {
+                loadingMessage.style.display = 'none';
+                errorMessage.textContent = `Error: ${message}`;
+                errorMessage.style.display = 'block';
+            } else {
+                loadingMessage.textContent = message;
+                loadingMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+            }
+        }
+
+        // Function to clear existing iframe and reset UI
+        function resetUIForNewSession() {
+            // Clear any existing iframe
+            while (iframeContainer.firstChild) {
+                iframeContainer.removeChild(iframeContainer.firstChild);
+            }
+            iframeContainer.style.visibility = 'hidden'; // Hide iframe container
+            displayMessage('Loading cloud browser...'); // Reset loading message
+            errorMessage.style.display = 'none'; // Hide error message
+            newSessionButton.disabled = true; // Disable button during session creation
+            if (pingIntervalId) {
+                clearInterval(pingIntervalId); // Clear any existing ping interval
+                pingIntervalId = null;
+            }
+        }
+
+        // Main asynchronous function to initialize the cloud browser
+        async function initializeCloudBrowser() {
+            resetUIForNewSession(); // Prepare UI for a new session
+
+            // Mock response provided by the user, to be used if fetch fails due to CORS
+            const mockSessionResponse = {
+                "data": {
+                    "id": "852dcf47-e8ce-4816-96d1-5f12bc1f971f",
+                    "cdp_url": "wss://connect.anchorbrowser.io?apiKey=sk-3fdd23b3448e47e99ded3a4d531f84fe&sessionId=852dcf47-e8ce-4816-96d1-5f12bc1f971f",
+                    "live_view_url": "https://live.anchorbrowser.io?sessionId=852dcf47-e8ce-4816-96d1-5f12bc1f971f"
+                }
+            };
+
+            try {
+                displayMessage('Creating browser session...');
+
+                // Create session with infinite timeout and maximum performance
+                const sessionUrl = 'https://api.anchorbrowser.io/v1/sessions';
+                const sessionOptions = {
+                    method: 'POST',
+                    headers: {
+                        'anchor-api-key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "session": {
+                            "initial_url": "https://anchorbrowser.io",
+                            "recording": {"active": false}, // Disable for performance
+                            "proxy": {"type": "anchor_residential", "country_code": "uk", "active": false},
+                            "timeout": {
+                                "max_duration": 999999, // Maximum possible duration
+                                "idle_timeout": 999999  // Maximum idle timeout
+                            },
+                            "live_view": {"read_only": false}
+                        },
+                        "browser": {
+                            "profile": {"name": "my-profile", "persist": true},
+                            "adblock": {"active": false},
+                            "popup_blocker": {"active": false},
+                            "captcha_solver": {"active": false},
+                            "headless": {"active": false}, // MUST be false for live_view_url
+                            "viewport": {"width": 1440, "height": 900},
+                            "fullscreen": {"active": false},
+                            "p2p_download": {"active": false},
+                            "extensions": ["550e8400-e29b-41d4-a716-446655440000", "6ba7b810-9dad-11d1-80b4-00c04fd430c8"]
+                        }
+                    })
+                };
+
+                let sessionData;
+                const sessionResponse = await fetch(sessionUrl, sessionOptions);
+                
+                if (!sessionResponse.ok) {
+                    const errorData = await sessionResponse.json();
+                    throw new Error(`Failed to create session: ${sessionResponse.status} ${sessionResponse.statusText} - ${JSON.stringify(errorData)}`);
+                }
+                sessionData = await sessionResponse.json();
+                console.log('Session created successfully:', sessionData);
+
+                // Ensure live_view_url exists before proceeding
+                if (sessionData.data && sessionData.data.live_view_url) {
+                    displayMessage('Session started. Loading live view...');
+
+                    // Create high-performance iframe
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'cloud-browser-iframe';
+                    iframe.src = sessionData.data.live_view_url;
+                    iframe.sandbox = 'allow-same-origin allow-scripts';
+                    iframe.allow = 'clipboard-read; clipboard-write';
+
+                    iframeContainer.appendChild(iframe);
+
+                    // Show iframe container once iframe is loaded
+                    iframe.onload = () => {
+                        loadingMessage.style.display = 'none';
+                        iframeContainer.style.visibility = 'visible';
+                        newSessionButton.disabled = false;
+                    };
+
+                    // Keep session alive with periodic pings
+                    pingIntervalId = setInterval(async () => {
+                        try {
+                            await fetch(`https://api.anchorbrowser.io/v1/sessions/${sessionData.data.id}/screenshot`, {
+                                headers: {'anchor-api-key': API_KEY}
+                            });
+                        } catch (e) {
+                            console.error('Error during session ping:', e);
+                        }
+                    }, 30000); // Ping every 30 seconds
+
+                } else {
+                    throw new Error('Live view URL not found in session response.');
+                }
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                let userMessage = 'An unknown error occurred.';
+
+                if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                    // This is the CORS/network error. Use the mock response to proceed.
+                    userMessage = 'Network error: Could not connect to the Anchor Browser API directly (likely CORS). Using a mock session to demonstrate functionality. For a real solution, consider a backend proxy.';
+                    displayMessage(userMessage, true); // Display as an error/warning
+
+                    // Proceed with the mock data
+                    const sessionData = mockSessionResponse;
+
+                    // Ensure live_view_url exists before proceeding
+                    if (sessionData.data && sessionData.data.live_view_url) {
+                        displayMessage('Session started (mock). Loading live view...');
+
+                        // Create high-performance iframe
+                        const iframe = document.createElement('iframe');
+                        iframe.id = 'cloud-browser-iframe';
+                        iframe.src = sessionData.data.live_view_url;
+                        iframe.sandbox = 'allow-same-origin allow-scripts';
+                        iframe.allow = 'clipboard-read; clipboard-write';
+
+                        iframeContainer.appendChild(iframe);
+
+                        iframe.onload = () => {
+                            loadingMessage.style.display = 'none';
+                            iframeContainer.style.visibility = 'visible';
+                            newSessionButton.disabled = false;
+                        };
+
+                        // The ping interval will still try to hit the real API, which will likely fail due to CORS.
+                        // It's important to note this limitation of the mock.
+                        pingIntervalId = setInterval(async () => {
+                            try {
+                                await fetch(`https://api.anchorbrowser.io/v1/sessions/${sessionData.data.id}/screenshot`, {
+                                    headers: {'anchor-api-key': API_KEY}
+                                });
+                            } catch (e) {
+                                console.error('Error during session ping (mock session):', e);
+                            }
+                        }, 30000);
+
+                    } else {
+                        // This case should ideally not happen with a valid mock, but for robustness
+                        userMessage = 'Mock live view URL not found. Cannot load browser.';
+                        displayMessage(userMessage, true);
+                        newSessionButton.disabled = false;
+                    }
+
+                } else {
+                    // Handle other types of errors as before
+                    if (error.message) {
+                        userMessage = error.message;
+                    }
+                    displayMessage(userMessage, true);
+                    newSessionButton.disabled = false;
+                }
+            }
+        }
+
+        // Event listener for the new session button
+        newSessionButton.addEventListener('click', initializeCloudBrowser);
+
+        // Initialize the browser when the window loads for the first time
+        window.onload = initializeCloudBrowser;
+    </script>
 </body>
 </html>
