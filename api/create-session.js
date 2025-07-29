@@ -46,10 +46,7 @@ export default async function handler(req, res) {
           popup_blocker: { active: true }, // Enabled for performance
           captcha_solver: { active: true },
           headless: { active: false },
-          viewport: {
-            width: 1920,
-            height: 1080
-          },
+          viewport: { width: 1920, height: 1080 }, // Higher resolution for better performance
           fullscreen: { active: false },
           p2p_download: { active: false } // Disabled for performance
         }
