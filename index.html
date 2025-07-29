@@ -125,10 +125,10 @@
                 
                 const data = await response.json();
                 
-                // IMPORTANT: Log the full response data to inspect the live_view_url
+                // Keep this log for debugging the live_view_url if WebSocket issues persist
                 console.log('API response for new session:', data);
 
-                if (response.ok && data.data && data.data.live_view_url) { // Added response.ok check
+                if (response.ok && data.data && data.data.live_view_url) {
                     const session = {
                         name: `Session ${sessions.length + 1}`,
                         url: data.data.live_view_url,
@@ -142,14 +142,13 @@
                     loadSession(sessions.length - 1);
                     renderSessions();
                 } else {
-                    // Improved error handling for API response
                     const errorMsg = data.error ? data.error : 'Unknown error from API';
                     throw new Error(`Failed to get live_view_url: ${errorMsg}`);
                 }
             } catch (error) {
                 console.error('Error creating new session:', error);
                 document.getElementById('loading').textContent = `Error creating session: ${error.message}. Please try again.`;
-                document.getElementById('loading').style.color = 'red'; // Make error message stand out
+                document.getElementById('loading').style.color = 'red';
             }
         }
 
@@ -163,20 +162,19 @@
 
         function deleteSession(index, event) {
             event.stopPropagation();
-            // Get the ID of the session to be deleted before splicing
             const sessionIdToDelete = sessions[index].id;
 
             sessions.splice(index, 1);
             localStorage.setItem('browser-sessions', JSON.stringify(sessions));
             
-            if (currentSession && currentSession.id === sessionIdToDelete) { // Check if current session is the one being deleted
+            if (currentSession && currentSession.id === sessionIdToDelete) {
                 currentSession = null;
                 document.getElementById('browser-iframe').style.display = 'none';
                 document.getElementById('loading').style.display = 'flex';
                 document.getElementById('loading').textContent = 'Select a session or create a new one';
-            } else if (sessions.length > 0) { // If other sessions exist, load the first one
+            } else if (sessions.length > 0) {
                 loadSession(0);
-            } else { // No sessions left
+            } else {
                 currentSession = null;
                 document.getElementById('browser-iframe').style.display = 'none';
                 document.getElementById('loading').style.display = 'flex';
@@ -191,7 +189,6 @@
         if (sessions.length === 0) {
             createNewSession();
         } else {
-            // Load the most recent session if available, otherwise prompt to create new
             loadSession(sessions.length - 1);
         }
     </script>
