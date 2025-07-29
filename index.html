@@ -10,7 +10,8 @@
             padding: 0; 
             height: 100vh; 
             font-family: Arial, sans-serif; 
-            display: flex; 
+            display: flex;
+            overflow: hidden; /* Prevent scrollbars */
         }
         
         .sidebar {
@@ -93,7 +94,8 @@
         
         .main-area { 
             flex: 1; 
-            position: relative; 
+            position: relative;
+            overflow: hidden; /* Prevent scrollbars */
         }
         
         #loading { 
@@ -109,10 +111,13 @@
             height: 100vh; 
             border: none; 
             display: none;
-            /* Performance optimizations only */
+            /* Performance optimizations */
             will-change: transform;
             transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
             image-rendering: optimizeSpeed;
+            image-rendering: -webkit-optimize-contrast;
         }
     </style>
 </head>
@@ -126,9 +131,11 @@
     <div class="main-area">
         <div id="loading">Creating new browser session...</div>
         <iframe id="browser-iframe" 
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups" 
-                allow="clipboard-read; clipboard-write"
-                loading="eager"></iframe>
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-top-navigation allow-presentation" 
+                allow="clipboard-read; clipboard-write; camera; microphone; geolocation; accelerometer; gyroscope; magnetometer; payment; usb; web-share; fullscreen"
+                loading="eager"
+                importance="high"
+                fetchpriority="high"></iframe>
     </div>
 
     <script>
@@ -181,19 +188,24 @@
         }
 
         function loadSession(index) {
+            const iframe = document.getElementById('browser-iframe');
             currentSession = sessions[index];
-            document.getElementById('browser-iframe').src = currentSession.url;
-            document.getElementById('browser-iframe').style.display = 'block';
+            
+            // Preload for faster switching
+            iframe.src = currentSession.url;
+            iframe.style.display = 'block';
             document.getElementById('loading').style.display = 'none';
             renderSessions();
         }
 
         function deleteSession(index, event) {
             event.stopPropagation();
+            const wasCurrentSession = currentSession === sessions[index];
+            
             sessions.splice(index, 1);
             localStorage.setItem('anchor-sessions', JSON.stringify(sessions));
             
-            if (currentSession === sessions[index]) {
+            if (wasCurrentSession) {
                 currentSession = null;
                 document.getElementById('browser-iframe').style.display = 'none';
                 document.getElementById('loading').style.display = 'flex';
@@ -203,7 +215,7 @@
             renderSessions();
         }
 
-        // Initialize - keep original behavior
+        // Initialize
         renderSessions();
         createNewSession();
     </script>
