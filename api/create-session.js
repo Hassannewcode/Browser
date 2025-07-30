@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         // Your Anchor API key for authentication.
         // This key is a static credential obtained from your Anchor Browser account dashboard.
         // It is not dynamically generated with each API call.
-        'anchor-api-key': 'sk-3fdd23b3448e47e99ded3a4d531f84fe',
+        'anchor-api-key': 'sk-8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
