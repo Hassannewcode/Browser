@@ -36,10 +36,9 @@ export default async function handler(req, res) {
     const response = await fetch('https://api.anchorbrowser.io/v1/sessions', {
       method: 'POST',
       headers: {
-        // Your Anchor API key for authentication.
-        // This key is a static credential obtained from your Anchor Browser account dashboard.
-        // It is not dynamically generated with each API call.
-        'anchor-api-key': 'sk-3fdd23b3448e47e99ded3a4d531f84fe',
+        // IMPORTANT: The Anchor API key should be securely loaded, e.g., from an environment variable.
+        // Do NOT hardcode API keys directly in your code.
+        // 'anchor-api-key': process.env.ANCHOR_API_KEY, // Example using environment variable
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -94,3 +93,55 @@ export default async function handler(req, res) {
     }
   }
 }
+
+// PostHog Remote Config initialization for client-side analytics and feature flags.
+// This block sets up the global configuration object that the PostHog JavaScript library
+// will use to initialize itself.
+(function() {
+  window._POSTHOG_REMOTE_CONFIG = window._POSTHOG_REMOTE_CONFIG || {};
+  window._POSTHOG_REMOTE_CONFIG['phc_F8JMNjW1i2KbGUTaW1unnDdLSPCoyc52SGRU0JecaUh'] = {
+    config: {
+      "token": "phc_F8JMNjW1i2KbGUTaW1unnDdLSPCoyc52SGRU0JecaUh",
+      "supportedCompression": ["gzip", "gzip-js"],
+      "hasFeatureFlags": false,
+      "captureDeadClicks": false,
+      "capturePerformance": {
+        "network_timing": true,
+        "web_vitals": true,
+        "web_vitals_allowed_metrics": null
+      },
+      "autocapture_opt_out": false,
+      "autocaptureExceptions": true,
+      "analytics": {
+        "endpoint": "/i/v0/e/"
+      },
+      "elementsChainAsString": true,
+      "errorTracking": {
+        "autocaptureExceptions": true,
+        "suppressionRules": []
+      },
+      "sessionRecording": {
+        "endpoint": "/s/",
+        "consoleLogRecordingEnabled": true,
+        "recorderVersion": "v2",
+        "sampleRate": null,
+        "minimumDurationMilliseconds": null,
+        "linkedFlag": null,
+        "networkPayloadCapture": null,
+        "masking": null,
+        "urlTriggers": [],
+        "urlBlocklist": [],
+        "eventTriggers": [],
+        "triggerMatchType": null,
+        "scriptConfig": null,
+        "recordCanvas": true,
+        "canvasFps": 3,
+        "canvasQuality": "0.4"
+      },
+      "heatmaps": true,
+      "surveys": false,
+      "defaultIdentifiedOnly": true
+    },
+    siteApps: []
+  }
+})();
